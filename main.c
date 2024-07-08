@@ -22,6 +22,12 @@ enum inst {
     inst_while_start,
     inst_while_end,
     inst_finish,
+    inst_opt_val_add2,
+    inst_opt_val_add3,
+    inst_opt_val_add4,
+    inst_opt_ptr_add2,
+    inst_opt_ptr_add3,
+    inst_opt_ptr_add4,
 };
 
 struct node {
@@ -70,10 +76,34 @@ void exec(struct node* mem) {
             case inst_while_end:
                 ip = &mem[ip->jmp];
                 break;
-            case inst_finish:
-                return;
             case inst_nop:
                 ip++;
+                break;
+            case inst_finish:
+                return;
+            case inst_opt_val_add2:
+                ap->x += 2;
+                ip += 2;
+                break;
+            case inst_opt_val_add3:
+                ap->x += 3;
+                ip += 3;
+                break;
+            case inst_opt_val_add4:
+                ap->x += 4;
+                ip += 4;
+                break;
+            case inst_opt_ptr_add2:
+                ap += 2;
+                ip += 2;
+                break;
+            case inst_opt_ptr_add3:
+                ap += 3;
+                ip += 3;
+                break;
+            case inst_opt_ptr_add4:
+                ap += 4;
+                ip += 4;
                 break;
         }
     }
@@ -86,12 +116,30 @@ void optimize(struct node* mem) {
         switch (mem[i].x) {
             case '>':
                 mem[i].inst = inst_ptr_inc;
+                if (mem[i + 1].x == '>') {
+                    mem[i].inst = inst_opt_ptr_add2;
+                    if (mem[i + 2].x == '>') {
+                        mem[i].inst = inst_opt_ptr_add3;
+                        if (mem[i + 3].x == '>') {
+                            mem[i].inst = inst_opt_ptr_add4;
+                        }
+                    }
+                }
                 break;
             case '<':
                 mem[i].inst = inst_ptr_dec;
                 break;
             case '+':
                 mem[i].inst = inst_val_inc;
+                if (mem[i + 1].x == '+') {
+                    mem[i].inst = inst_opt_val_add2;
+                    if (mem[i + 2].x == '+') {
+                        mem[i].inst = inst_opt_val_add3;
+                        if (mem[i + 3].x == '+') {
+                            mem[i].inst = inst_opt_val_add4;
+                        }
+                    }
+                }
                 break;
             case '-':
                 mem[i].inst = inst_val_dec;
@@ -108,7 +156,7 @@ void optimize(struct node* mem) {
                 break;
             case ']':
                 mem[i].inst = inst_while_end;
-                mem[jmptable_stack[jmptable_stack_size - 1]].jmp = i+1;
+                mem[jmptable_stack[jmptable_stack_size - 1]].jmp = i + 1;
                 mem[i].jmp = jmptable_stack[--jmptable_stack_size];
                 break;
             case '\0':
