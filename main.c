@@ -82,19 +82,19 @@ void exec(struct node* mem) {
                 return;
             case inst_opt_ptr_add:
                 ap += ip->opt;
-                ip += ip->opt;
+                ip++;
                 break;
             case inst_opt_ptr_sub:
                 ap -= ip->opt;
-                ip += ip->opt;
+                ip++;
                 break;
             case inst_opt_val_add:
                 ap->x += ip->opt;
-                ip += ip->opt;
+                ip++;
                 break;
             case inst_opt_val_sub:
                 ap->x -= ip->opt;
-                ip += ip->opt;
+                ip++;
                 break;
             case inst_opt_zero:
                 ap->x = 0;
@@ -106,6 +106,8 @@ void exec(struct node* mem) {
 void optimize(char* src, struct node* dst) {
     uint16_t i = 0;
     uint16_t i_compress = 0;
+    uint32_t clean_i = 0;
+    uint32_t clean_j = 0;
     uint16_t jmptable_stack[file_capacity];
     uint16_t jmptable_stack_size = 0;
     while (1) {
@@ -166,24 +168,53 @@ void optimize(char* src, struct node* dst) {
                 break;
             case '[':
                 dst[i].inst = inst_while_start;
+                break;
+            case ']':
+                dst[i].inst = inst_while_end;
+                break;
+            case '\0':
+                dst[i].inst = inst_finish;
+                break;
+            default:
+                dst[i].inst = inst_nop;
+                break;
+        }
+        if (dst[i].inst == inst_finish)
+            break;
+        i++;
+    }
+
+    while (1) {
+        switch (dst[clean_j].inst) {
+            case inst_null:
+            case inst_nop:
+                break;
+            case inst_finish:
+                dst[clean_i++] = dst[clean_j];
+                break;
+            default:
+                dst[clean_i++] = dst[clean_j];
+                break;
+        }
+        if (dst[clean_j].inst == inst_finish)
+            break;
+        clean_j++;
+    }
+    for (uint32_t i = 0; dst[i].inst != inst_finish; i++) {
+        switch (dst[i].inst) {
+            case inst_while_start:
                 jmptable_stack[jmptable_stack_size++] = i;
                 if (dst[i + 1].x == '-' && dst[i + 2].x == ']') {
                     dst[i].inst = inst_opt_zero;
                 }
                 break;
-            case ']':
-                dst[i].inst = inst_while_end;
+            case inst_while_end:
                 dst[jmptable_stack[jmptable_stack_size - 1]].opt = i + 1;
                 dst[i].opt = jmptable_stack[--jmptable_stack_size];
                 break;
-            case '\0':
-                dst[i].inst = inst_finish;
-                return;
             default:
-                dst[i].inst = inst_nop;
                 break;
         }
-        i++;
     }
 }
 
