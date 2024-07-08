@@ -22,12 +22,19 @@ enum inst {
     inst_while_start,
     inst_while_end,
     inst_finish,
-    inst_opt_val_add2,
-    inst_opt_val_add3,
-    inst_opt_val_add4,
     inst_opt_ptr_add2,
     inst_opt_ptr_add3,
     inst_opt_ptr_add4,
+    inst_opt_ptr_sub2,
+    inst_opt_ptr_sub3,
+    inst_opt_ptr_sub4,
+    inst_opt_val_add2,
+    inst_opt_val_add3,
+    inst_opt_val_add4,
+    inst_opt_val_sub2,
+    inst_opt_val_sub3,
+    inst_opt_val_sub4,
+    inst_opt_zero,
 };
 
 struct node {
@@ -81,6 +88,30 @@ void exec(struct node* mem) {
                 break;
             case inst_finish:
                 return;
+            case inst_opt_ptr_add2:
+                ap += 2;
+                ip += 2;
+                break;
+            case inst_opt_ptr_add3:
+                ap += 3;
+                ip += 3;
+                break;
+            case inst_opt_ptr_add4:
+                ap += 4;
+                ip += 4;
+                break;
+            case inst_opt_ptr_sub2:
+                ap -= 2;
+                ip += 2;
+                break;
+            case inst_opt_ptr_sub3:
+                ap -= 3;
+                ip += 3;
+                break;
+            case inst_opt_ptr_sub4:
+                ap -= 4;
+                ip += 4;
+                break;
             case inst_opt_val_add2:
                 ap->x += 2;
                 ip += 2;
@@ -93,17 +124,21 @@ void exec(struct node* mem) {
                 ap->x += 4;
                 ip += 4;
                 break;
-            case inst_opt_ptr_add2:
-                ap += 2;
+            case inst_opt_val_sub2:
+                ap->x -= 2;
                 ip += 2;
                 break;
-            case inst_opt_ptr_add3:
-                ap += 3;
+            case inst_opt_val_sub3:
+                ap->x -= 3;
                 ip += 3;
                 break;
-            case inst_opt_ptr_add4:
-                ap += 4;
+            case inst_opt_val_sub4:
+                ap->x -= 4;
                 ip += 4;
+                break;
+            case inst_opt_zero:
+                ap->x = 0;
+                ip += 3;
                 break;
         }
     }
@@ -128,6 +163,15 @@ void optimize(struct node* mem) {
                 break;
             case '<':
                 mem[i].inst = inst_ptr_dec;
+                if (mem[i + 1].x == '<') {
+                    mem[i].inst = inst_opt_ptr_sub2;
+                    if (mem[i + 2].x == '<') {
+                        mem[i].inst = inst_opt_ptr_sub3;
+                        if (mem[i + 3].x == '<') {
+                            mem[i].inst = inst_opt_ptr_sub4;
+                        }
+                    }
+                }
                 break;
             case '+':
                 mem[i].inst = inst_val_inc;
@@ -143,6 +187,15 @@ void optimize(struct node* mem) {
                 break;
             case '-':
                 mem[i].inst = inst_val_dec;
+                if (mem[i + 1].x == '-') {
+                    mem[i].inst = inst_opt_val_sub2;
+                    if (mem[i + 2].x == '-') {
+                        mem[i].inst = inst_opt_val_sub3;
+                        if (mem[i + 3].x == '-') {
+                            mem[i].inst = inst_opt_val_sub4;
+                        }
+                    }
+                }
                 break;
             case '.':
                 mem[i].inst = inst_out;
@@ -153,6 +206,9 @@ void optimize(struct node* mem) {
             case '[':
                 mem[i].inst = inst_while_start;
                 jmptable_stack[jmptable_stack_size++] = i;
+                if (mem[i + 1].x == '-' && mem[i + 2].x == ']') {
+                    mem[i].inst = inst_opt_zero;
+                }
                 break;
             case ']':
                 mem[i].inst = inst_while_end;
