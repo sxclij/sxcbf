@@ -1,23 +1,25 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
 
-#define mem_capacity (1 << 20)
+#define mem_capacity (1 << 16)
 #define file_capacity (1 << 16)
 
-void file_read(char* dst, const char* path) {
-    FILE* file_ptr = fopen(path, "r");
-    uint32_t file_size = fread(dst, sizeof(char), file_capacity, file_ptr);
-    dst[file_size] = '\0';
-}
+struct node {
+    uint16_t jmp;
+    char x;
+};
 
-void exec(char* mem) {
-    char* ip = &mem[0];
-    char* ap = &mem[file_capacity];
-    char* sp = &mem[mem_capacity - 1];
+void exec(struct node* mem) {
+    struct node* ip = &mem[0];
+    struct node* ap = &mem[file_capacity];
     uint_fast8_t lc = 0;
+
+    struct node* opt_loop;
+
     while (1) {
-        switch (*ip) {
+        switch (ip->x) {
             case '>':
                 ap++;
                 break;
@@ -25,33 +27,39 @@ void exec(char* mem) {
                 ap--;
                 break;
             case '+':
-                (*ap)++;
+                ap->x++;
                 break;
             case '-':
-                (*ap)--;
+                ap->x--;
                 break;
             case '.':
-                putchar(*ap);
+                putchar(ap->x);
                 break;
             case ',':
-                *ap = getchar();
+                ap->x = getchar();
                 break;
             case '[':
-                lc = (*ap == 0);
+                lc = (ap->x == 0);
                 while (lc) {
                     ip++;
-                    lc += (*ip == '[');
-                    lc -= (*ip == ']');
+                    lc += (ip->x == '[');
+                    lc -= (ip->x == ']');
                 }
                 break;
             case ']':
+                if (ip->jmp != 0) {
+                    ip = &mem[ip->jmp];
+                    break;
+                }
+                opt_loop = ip;
                 lc = 1;
                 while (lc) {
                     ip--;
-                    lc -= (*ip == '[');
-                    lc += (*ip == ']');
+                    lc -= (ip->x == '[');
+                    lc += (ip->x == ']');
                 }
                 ip--;
+                opt_loop->jmp = ip - mem;
                 break;
             case '\0':
                 return;
@@ -63,7 +71,14 @@ void exec(char* mem) {
 }
 
 int main() {
-    static char mem[file_capacity];
-    file_read(mem, "data.txt");
+    static char buf[file_capacity];
+    static struct node mem[mem_capacity];
+
+    FILE* file_ptr = fopen("data.txt", "r");
+    uint32_t file_size = fread(buf, sizeof(char), sizeof(buf), file_ptr);
+    for (uint32_t i = 0; buf[i] != '\0'; i++)
+        mem[i].x = buf[i];
+
     exec(mem);
+    printf("\n\n%fs\n", ((double)clock()) / CLOCKS_PER_SEC);
 }
