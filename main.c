@@ -87,6 +87,7 @@ int main() {
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -181,18 +182,18 @@ void exec(struct node* mem) {
                 break;
             case inst_opt_zero:
                 ap->x = 0;
-                ip += 3;
+                ip++;
                 break;
         }
     }
 }
 void optimize(char* src, struct node* dst) {
-    uint16_t i = 0;
-    uint16_t i_compress = 0;
+    uint32_t i = 0;
+    uint32_t i_compress = 0;
     uint32_t clean_i = 0;
     uint32_t clean_j = 0;
-    uint16_t jmptable_stack[file_capacity];
-    uint16_t jmptable_stack_size = 0;
+    uint32_t jmptable_stack[file_capacity];
+    uint32_t jmptable_stack_size = 0;
     while (1) {
         switch (dst[i].x) {
             case '>':
@@ -251,6 +252,10 @@ void optimize(char* src, struct node* dst) {
                 break;
             case '[':
                 dst[i].inst = inst_while_start;
+                if (memcmp(&src[i], "[-]", 3) == 0) {
+                    dst[i].inst = inst_opt_zero;
+                    i += 2;
+                }
                 break;
             case ']':
                 dst[i].inst = inst_while_end;
@@ -287,9 +292,6 @@ void optimize(char* src, struct node* dst) {
         switch (dst[i].inst) {
             case inst_while_start:
                 jmptable_stack[jmptable_stack_size++] = i;
-                if (dst[i + 1].x == '-' && dst[i + 2].x == ']') {
-                    dst[i].inst = inst_opt_zero;
-                }
                 break;
             case inst_while_end:
                 dst[jmptable_stack[jmptable_stack_size - 1]].opt = i + 1;
