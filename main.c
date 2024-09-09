@@ -9,6 +9,7 @@
 
 #define bfsize (1 << 14)
 #define bfint uint32_t
+#define bfalign 4
 
 int main() {
     clock_t clock_start = clock();
@@ -17,8 +18,8 @@ int main() {
     bfint bf_ip = 0;
     bfint nest = 1;
 
-    char file_data[bfsize];
-    __attribute__((aligned(16))) char bf_mem[bfsize];
+    __attribute__((aligned(bfalign))) char file_data[bfsize];
+    __attribute__((aligned(bfalign))) char bf_mem[bfsize];
 
     FILE* file_ptr = fopen("data.txt", "r");
     bfint file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
@@ -69,5 +70,5 @@ int main() {
         }
         bf_ip++;
     }
-    printf("\n%f\n", (double)(clock() - clock_start) / CLOCKS_PER_SEC);
+    printf("%f\n", (double)(clock() - clock_start) / CLOCKS_PER_SEC);
 }
