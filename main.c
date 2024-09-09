@@ -11,6 +11,14 @@
 #define bfint uint32_t
 #define bfalign 4
 
+enum e_bfinst {
+    nop,
+};
+struct bfinst{
+    enum e_bfinst inst;
+    bfint val;
+};
+
 int main() {
     clock_t clock_start = clock();
 
