@@ -14,7 +14,7 @@
 enum bfinst_kind {
     bfinst_kind_nop,
 };
-struct bfinst{
+struct bfinst {
     enum bfinst_kind inst;
     bfint val;
 };
@@ -23,8 +23,6 @@ struct bfnode {
     struct bfnode* next;
 };
 
-
-
 int main() {
     clock_t clock_start = clock();
 
@@ -32,8 +30,9 @@ int main() {
     bfint bf_ip = 0;
     bfint nest = 1;
 
-    __attribute__((aligned(bfalign))) char file_data[bfsize];
     __attribute__((aligned(bfalign))) char bf_mem[bfsize];
+    __attribute__((aligned(bfalign))) struct bfinst bf_inst[bfsize];
+    static char file_data[bfsize];
     static struct bfnode bf_nodes[bfsize];
     static bfint bf_nodes_size;
 
