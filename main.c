@@ -12,7 +12,7 @@
 #define bfalign 4
 
 enum bfinst_kind {
-    bfinst_kind_nop,
+    bfinst_kind_null,
     bfinst_kind_add_val,
     bfinst_kind_add_ptr,
     bfinst_kind_while_start,
@@ -41,51 +41,61 @@ int main() {
     __attribute__((aligned(bfalign))) struct bfinst bf_inst[bfsize];
     static char file_data[bfsize];
     static struct bfnode bf_nodes[bfsize];
+    static struct bfnode* bf_nodes_stack[bfsize];
     static bfint bf_nodes_size;
+    static bfint bf_nodes_stack_size;
 
     FILE* file_ptr = fopen("data.txt", "r");
     bfint file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
     file_data[file_size] = '\0';
     fclose(file_ptr);
 
-    for(bfint i=0;i<file_size;i++) {
+    for (bfint i = 0; i < file_size; i++) {
         struct bfnode* this = &bf_nodes[bf_nodes_size];
         this->next = &bf_nodes[++bf_nodes_size];
-        if(file_data[i] == '+') {
+        if (file_data[i] == '+') {
             this->value.inst = bfinst_kind_add_val;
             this->value.val = 1;
         }
-        if(file_data[i] == '-') {
+        if (file_data[i] == '-') {
             this->value.inst = bfinst_kind_add_val;
             this->value.val = -1;
         }
-        if(file_data[i] == '>') {
+        if (file_data[i] == '>') {
             this->value.inst = bfinst_kind_add_ptr;
             this->value.val = 1;
         }
-        if(file_data[i] == '<') {
+        if (file_data[i] == '<') {
             this->value.inst = bfinst_kind_add_ptr;
             this->value.val = -1;
         }
-        if(file_data[i] == '[') {
+        if (file_data[i] == '[') {
             this->value.inst = bfinst_kind_while_start;
             this->value.val = 0;
         }
-        if(file_data[i] == ']') {
+        if (file_data[i] == ']') {
             this->value.inst = bfinst_kind_while_end;
             this->value.val = 0;
         }
-        if(file_data[i] == '.') {
+        if (file_data[i] == '.') {
             this->value.inst = bfinst_kind_io_out;
             this->value.val = 0;
         }
-        if(file_data[i] == ',') {
+        if (file_data[i] == ',') {
             this->value.inst = bfinst_kind_io_in;
             this->value.val = 0;
         }
     }
+    for (struct bfnode* itr = bf_nodes; itr->value.inst == bfinst_kind_null;) {
+        if(itr->value.inst == bfinst_kind_add_val) {
+            if(itr->next->value.inst == bfinst_kind_add_val) {
+                itr->value.val += itr->next->value.val;
+                itr->next = itr->next->next;
+            }
+        }
+    }
 
-    memset(bf_mem, 0, sizeof(bf_mem));
+        memset(bf_mem, 0, sizeof(bf_mem));
     while (1) {
         if (file_data[bf_ip] == '>') {
             bf_ap++;
