@@ -15,7 +15,7 @@ enum bfinst_kind {
     bfinst_kind_nop,
 };
 struct bfinst{
-    enum e_bfinst inst;
+    enum bfinst_kind inst;
     bfint val;
 };
 
