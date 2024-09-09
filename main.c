@@ -8,11 +8,18 @@
 #include <time.h>
 
 #define bfsize (1 << 14)
-#define bfint uint32_t
+#define bfint int16_t
 #define bfalign 4
 
 enum bfinst_kind {
     bfinst_kind_nop,
+    bfinst_kind_add_val,
+    bfinst_kind_add_ptr,
+    bfinst_kind_while_start,
+    bfinst_kind_while_end,
+    bfinst_kind_io_in,
+    bfinst_kind_io_out,
+    bfinst_kind_end,
 };
 struct bfinst {
     enum bfinst_kind inst;
@@ -40,6 +47,43 @@ int main() {
     bfint file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
     file_data[file_size] = '\0';
     fclose(file_ptr);
+
+    for(bfint i=0;i<file_size;i++) {
+        struct bfnode* this = &bf_nodes[bf_nodes_size];
+        this->next = &bf_nodes[++bf_nodes_size];
+        if(file_data[i] == '+') {
+            this->value.inst = bfinst_kind_add_val;
+            this->value.val = 1;
+        }
+        if(file_data[i] == '-') {
+            this->value.inst = bfinst_kind_add_val;
+            this->value.val = -1;
+        }
+        if(file_data[i] == '>') {
+            this->value.inst = bfinst_kind_add_ptr;
+            this->value.val = 1;
+        }
+        if(file_data[i] == '<') {
+            this->value.inst = bfinst_kind_add_ptr;
+            this->value.val = -1;
+        }
+        if(file_data[i] == '[') {
+            this->value.inst = bfinst_kind_while_start;
+            this->value.val = 0;
+        }
+        if(file_data[i] == ']') {
+            this->value.inst = bfinst_kind_while_end;
+            this->value.val = 0;
+        }
+        if(file_data[i] == '.') {
+            this->value.inst = bfinst_kind_io_out;
+            this->value.val = 0;
+        }
+        if(file_data[i] == ',') {
+            this->value.inst = bfinst_kind_io_in;
+            this->value.val = 0;
+        }
+    }
 
     memset(bf_mem, 0, sizeof(bf_mem));
     while (1) {
