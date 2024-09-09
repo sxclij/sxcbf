@@ -7,18 +7,24 @@
 #include <string.h>
 #include <time.h>
 
+#define bfsize (1 << 14)
+#define bfint uint32_t
+
 int main() {
     clock_t clock_start = clock();
 
-    char file_data[65536];
+    bfint bf_ap = 0;
+    bfint bf_ip = 0;
+    bfint nest = 1;
+
+    char file_data[bfsize];
+    __attribute__((aligned(16))) char bf_mem[bfsize];
+
     FILE* file_ptr = fopen("data.txt", "r");
-    uint_fast32_t file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
+    bfint file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
     file_data[file_size] = '\0';
     fclose(file_ptr);
 
-    register uint_fast16_t bf_ap = 0;
-    register uint_fast16_t bf_ip = 0;
-    __attribute__((aligned(16))) uint_fast8_t bf_mem[(1 << 16)];
     memset(bf_mem, 0, sizeof(bf_mem));
     while (1) {
         if (file_data[bf_ip] == '>') {
@@ -31,7 +37,7 @@ int main() {
             bf_mem[bf_ap]--;
         } else if (file_data[bf_ip] == '[') {
             if (bf_mem[bf_ap] == 0) {
-                uint_fast8_t nest = 1;
+                nest = 1;
                 while (nest) {
                     bf_ip++;
                     if (file_data[bf_ip] == '[') {
@@ -43,7 +49,7 @@ int main() {
                 }
             }
         } else if (file_data[bf_ip] == ']') {
-            uint_fast8_t nest = 1;
+            nest = 1;
             while (nest) {
                 bf_ip--;
                 if (file_data[bf_ip] == '[') {
