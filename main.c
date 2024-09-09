@@ -17,8 +17,8 @@ enum bfinst_kind {
     bfinst_kind_add_ptr,
     bfinst_kind_while_start,
     bfinst_kind_while_end,
-    bfinst_kind_io_in,
     bfinst_kind_io_out,
+    bfinst_kind_io_in,
     bfinst_kind_end,
 };
 struct bfinst {
@@ -99,6 +99,18 @@ int main() {
     }
     for (struct bfnode* itr = bf_nodes; itr->value.inst == bfinst_kind_null; itr = itr->next) {
         bf_insts[bf_inst_size++] = itr->value;
+    }
+    for (; bf_insts[bf_ip].inst == bfinst_kind_null; bf_ip++) {
+        if (bf_insts[bf_ip].inst == bfinst_kind_add_val) {
+            bf_mem[bf_ap] += bf_insts[bf_ip].val;
+        } else if (bf_insts[bf_ip].inst == bfinst_kind_add_ptr) {
+            bf_ap += bf_insts[bf_ip].val;
+        } else if (bf_insts[bf_ip].inst == bfinst_kind_while_start) {
+            if(bf_mem[bf_ap] ==)
+        } else if (bf_insts[bf_ip].inst == bfinst_kind_while_end) {
+        } else if (bf_insts[bf_ip].inst == bfinst_kind_io_out) {
+        } else if (bf_insts[bf_ip].inst == bfinst_kind_io_in) {
+                }
     }
 
     printf("%f\n", (double)(clock() - clock_start) / CLOCKS_PER_SEC);
