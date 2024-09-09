@@ -38,12 +38,13 @@ int main() {
     bfint nest = 1;
 
     __attribute__((aligned(bfalign))) char bf_mem[bfsize];
-    __attribute__((aligned(bfalign))) struct bfinst bf_inst[bfsize];
+    __attribute__((aligned(bfalign))) struct bfinst bf_insts[bfsize];
     static char file_data[bfsize];
     static struct bfnode bf_nodes[bfsize];
     static struct bfnode* bf_nodes_stack[bfsize];
-    static bfint bf_nodes_size;
-    static bfint bf_nodes_stack_size;
+    static bfint bf_inst_size = 0;
+    static bfint bf_nodes_size = 0;
+    static bfint bf_nodes_stack_size = 0;
 
     FILE* file_ptr = fopen("data.txt", "r");
     bfint file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
@@ -87,57 +88,18 @@ int main() {
         }
     }
     for (struct bfnode* itr = bf_nodes; itr->value.inst == bfinst_kind_null;) {
-        if(itr->value.inst == bfinst_kind_add_val) {
-            if(itr->next->value.inst == bfinst_kind_add_val) {
+        if (itr->value.inst == bfinst_kind_add_val) {
+            if (itr->next->value.inst == bfinst_kind_add_val) {
                 itr->value.val += itr->next->value.val;
                 itr->next = itr->next->next;
             }
+        } else {
+            itr = itr->next;
         }
+    }
+    for (struct bfnode* itr = bf_nodes; itr->value.inst == bfinst_kind_null; itr = itr->next) {
+        bf_insts[bf_inst_size++] = itr->value;
     }
 
-        memset(bf_mem, 0, sizeof(bf_mem));
-    while (1) {
-        if (file_data[bf_ip] == '>') {
-            bf_ap++;
-        } else if (file_data[bf_ip] == '<') {
-            bf_ap--;
-        } else if (file_data[bf_ip] == '+') {
-            bf_mem[bf_ap]++;
-        } else if (file_data[bf_ip] == '-') {
-            bf_mem[bf_ap]--;
-        } else if (file_data[bf_ip] == '[') {
-            if (bf_mem[bf_ap] == 0) {
-                nest = 1;
-                while (nest) {
-                    bf_ip++;
-                    if (file_data[bf_ip] == '[') {
-                        nest++;
-                    }
-                    if (file_data[bf_ip] == ']') {
-                        nest--;
-                    }
-                }
-            }
-        } else if (file_data[bf_ip] == ']') {
-            nest = 1;
-            while (nest) {
-                bf_ip--;
-                if (file_data[bf_ip] == '[') {
-                    nest--;
-                }
-                if (file_data[bf_ip] == ']') {
-                    nest++;
-                }
-            }
-            bf_ip--;
-        } else if (file_data[bf_ip] == '.') {
-            putchar(bf_mem[bf_ap]);
-        } else if (file_data[bf_ip] == ',') {
-            bf_mem[bf_ap] = getchar();
-        } else if (file_data[bf_ip] == '\0') {
-            break;
-        }
-        bf_ip++;
-    }
     printf("%f\n", (double)(clock() - clock_start) / CLOCKS_PER_SEC);
 }
