@@ -105,30 +105,22 @@ enum inst {
     inst_while_start,
     inst_while_end,
     inst_finish,
-    inst_opt_ptr_add2,
-    inst_opt_ptr_add3,
-    inst_opt_ptr_add4,
-    inst_opt_ptr_sub2,
-    inst_opt_ptr_sub3,
-    inst_opt_ptr_sub4,
-    inst_opt_val_add2,
-    inst_opt_val_add3,
-    inst_opt_val_add4,
-    inst_opt_val_sub2,
-    inst_opt_val_sub3,
-    inst_opt_val_sub4,
+    inst_opt_ptr_add,
+    inst_opt_ptr_sub,
+    inst_opt_val_add,
+    inst_opt_val_sub,
     inst_opt_zero,
 };
 
 struct node {
     enum inst inst;
     char x;
-    uint16_t jmp;
+    uint16_t opt;
 };
 
 void exec(struct node* mem) {
     struct node* ip = &mem[0];
-    struct node* ap = &mem[file_capacity];
+    struct node* ap = &mem[0];
 
     while (1) {
         switch (ip->inst) {
@@ -160,64 +152,32 @@ void exec(struct node* mem) {
                 if (ap->x != 0) {
                     ip++;
                 } else {
-                    ip = &mem[ip->jmp];
+                    ip = &mem[ip->opt];
                 }
                 break;
             case inst_while_end:
-                ip = &mem[ip->jmp];
+                ip = &mem[ip->opt];
                 break;
             case inst_nop:
                 ip++;
                 break;
             case inst_finish:
                 return;
-            case inst_opt_ptr_add2:
-                ap += 2;
-                ip += 2;
+            case inst_opt_ptr_add:
+                ap += ip->opt;
+                ip += ip->opt;
                 break;
-            case inst_opt_ptr_add3:
-                ap += 3;
-                ip += 3;
+            case inst_opt_ptr_sub:
+                ap -= ip->opt;
+                ip += ip->opt;
                 break;
-            case inst_opt_ptr_add4:
-                ap += 4;
-                ip += 4;
+            case inst_opt_val_add:
+                ap->x += ip->opt;
+                ip += ip->opt;
                 break;
-            case inst_opt_ptr_sub2:
-                ap -= 2;
-                ip += 2;
-                break;
-            case inst_opt_ptr_sub3:
-                ap -= 3;
-                ip += 3;
-                break;
-            case inst_opt_ptr_sub4:
-                ap -= 4;
-                ip += 4;
-                break;
-            case inst_opt_val_add2:
-                ap->x += 2;
-                ip += 2;
-                break;
-            case inst_opt_val_add3:
-                ap->x += 3;
-                ip += 3;
-                break;
-            case inst_opt_val_add4:
-                ap->x += 4;
-                ip += 4;
-                break;
-            case inst_opt_val_sub2:
-                ap->x -= 2;
-                ip += 2;
-                break;
-            case inst_opt_val_sub3:
-                ap->x -= 3;
-                ip += 3;
-                break;
-            case inst_opt_val_sub4:
-                ap->x -= 4;
-                ip += 4;
+            case inst_opt_val_sub:
+                ap->x -= ip->opt;
+                ip += ip->opt;
                 break;
             case inst_opt_zero:
                 ap->x = 0;
@@ -226,83 +186,84 @@ void exec(struct node* mem) {
         }
     }
 }
-void optimize(struct node* mem) {
+void optimize(char* src, struct node* dst) {
     uint16_t i = 0;
+    uint16_t i_compress = 0;
     uint16_t jmptable_stack[file_capacity];
     uint16_t jmptable_stack_size = 0;
     while (1) {
-        switch (mem[i].x) {
+        switch (dst[i].x) {
             case '>':
-                mem[i].inst = inst_ptr_inc;
-                if (mem[i + 1].x == '>') {
-                    mem[i].inst = inst_opt_ptr_add2;
-                    if (mem[i + 2].x == '>') {
-                        mem[i].inst = inst_opt_ptr_add3;
-                        if (mem[i + 3].x == '>') {
-                            mem[i].inst = inst_opt_ptr_add4;
-                        }
+                dst[i].inst = inst_ptr_inc;
+                if (dst[i + 1].x == '>') {
+                    i_compress = i;
+                    dst[i_compress].opt = 1;
+                    dst[i_compress].inst = inst_opt_ptr_add;
+                    while (dst[i + 1].x == '>') {
+                        dst[i_compress].opt++;
+                        i++;
                     }
                 }
                 break;
             case '<':
-                mem[i].inst = inst_ptr_dec;
-                if (mem[i + 1].x == '<') {
-                    mem[i].inst = inst_opt_ptr_sub2;
-                    if (mem[i + 2].x == '<') {
-                        mem[i].inst = inst_opt_ptr_sub3;
-                        if (mem[i + 3].x == '<') {
-                            mem[i].inst = inst_opt_ptr_sub4;
-                        }
+                dst[i].inst = inst_ptr_dec;
+                if (dst[i + 1].x == '<') {
+                    i_compress = i;
+                    dst[i_compress].opt = 1;
+                    dst[i_compress].inst = inst_opt_ptr_sub;
+                    while (dst[i + 1].x == '<') {
+                        dst[i_compress].opt++;
+                        i++;
                     }
                 }
                 break;
             case '+':
-                mem[i].inst = inst_val_inc;
-                if (mem[i + 1].x == '+') {
-                    mem[i].inst = inst_opt_val_add2;
-                    if (mem[i + 2].x == '+') {
-                        mem[i].inst = inst_opt_val_add3;
-                        if (mem[i + 3].x == '+') {
-                            mem[i].inst = inst_opt_val_add4;
-                        }
+                dst[i].inst = inst_val_inc;
+                if (dst[i + 1].x == '+') {
+                    i_compress = i;
+                    dst[i_compress].opt = 1;
+                    dst[i_compress].inst = inst_opt_val_add;
+                    while (dst[i + 1].x == '+') {
+                        dst[i_compress].opt++;
+                        i++;
                     }
                 }
                 break;
             case '-':
-                mem[i].inst = inst_val_dec;
-                if (mem[i + 1].x == '-') {
-                    mem[i].inst = inst_opt_val_sub2;
-                    if (mem[i + 2].x == '-') {
-                        mem[i].inst = inst_opt_val_sub3;
-                        if (mem[i + 3].x == '-') {
-                            mem[i].inst = inst_opt_val_sub4;
-                        }
+                dst[i].inst = inst_val_dec;
+                if (dst[i + 1].x == '-') {
+                    i_compress = i;
+                    dst[i_compress].opt = 1;
+                    dst[i_compress].inst = inst_opt_val_sub;
+                    while (dst[i + 1].x == '-') {
+                        dst[i_compress].opt++;
+                        i++;
                     }
                 }
                 break;
             case '.':
-                mem[i].inst = inst_out;
+                dst[i].inst = inst_out;
                 break;
             case ',':
-                mem[i].inst = inst_in;
+                dst[i].inst = inst_in;
                 break;
             case '[':
-                mem[i].inst = inst_while_start;
+                dst[i].inst = inst_while_start;
                 jmptable_stack[jmptable_stack_size++] = i;
-                if (mem[i + 1].x == '-' && mem[i + 2].x == ']') {
-                    mem[i].inst = inst_opt_zero;
+                if (dst[i + 1].x == '-' && dst[i + 2].x == ']') {
+                    dst[i].inst = inst_opt_zero;
                 }
                 break;
             case ']':
-                mem[i].inst = inst_while_end;
-                mem[jmptable_stack[jmptable_stack_size - 1]].jmp = i + 1;
-                mem[i].jmp = jmptable_stack[--jmptable_stack_size];
+                dst[i].inst = inst_while_end;
+                dst[jmptable_stack[jmptable_stack_size - 1]].opt = i + 1;
+                dst[i].opt = jmptable_stack[--jmptable_stack_size];
                 break;
             case '\0':
-                mem[i].inst = inst_finish;
+                dst[i].inst = inst_finish;
                 return;
             default:
-                mem[i].inst = inst_nop;
+                dst[i].inst = inst_nop;
                 break;
         }
         i++;
@@ -310,16 +271,22 @@ void optimize(struct node* mem) {
 }
 
 int main() {
-    static char buf[file_capacity];
-    static struct node mem[mem_capacity];
+    static char src[file_capacity];
+    static struct node nodes[mem_capacity];
 
     FILE* file_ptr = fopen("data.txt", "r");
-    uint32_t file_size = fread(buf, sizeof(char), sizeof(buf), file_ptr);
-    for (uint32_t i = 0; buf[i] != '\0'; i++)
-        mem[i].x = buf[i];
+    uint32_t file_size = fread(src, sizeof(char), sizeof(src), file_ptr);
 
-    optimize(mem);
-    exec(mem);
+    for (uint32_t i = 0; src[i] != '\0'; i++)
+        nodes[i].x = src[i];
+
+    optimize(src, nodes);
+
+    for (uint32_t i = 0; src[i] != '\0'; i++)
+        nodes[i].x = 0;
+
+    exec(nodes);
+
     printf("\n\n%fs\n", ((double)clock()) / CLOCKS_PER_SEC);
 >>>>>>> 12ab673 (連続する命令を圧縮)
 }
