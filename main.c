@@ -106,11 +106,16 @@ int main() {
         } else if (bf_insts[bf_ip].inst == bfinst_kind_add_ptr) {
             bf_ap += bf_insts[bf_ip].val;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_while_start) {
-            if(bf_mem[bf_ap] ==)
+            if (bf_mem[bf_ap] != 0) {
+                bf_ip = bf_insts[bf_ip].val;
+            }
         } else if (bf_insts[bf_ip].inst == bfinst_kind_while_end) {
+            bf_ip = bf_insts[bf_ip].val;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_io_out) {
+            putchar(bf_mem[bf_ap]);
         } else if (bf_insts[bf_ip].inst == bfinst_kind_io_in) {
-                }
+            bf_mem[bf_ap] = getchar();
+        }
     }
 
     printf("%f\n", (double)(clock() - clock_start) / CLOCKS_PER_SEC);
