@@ -18,6 +18,12 @@ struct bfinst{
     enum bfinst_kind inst;
     bfint val;
 };
+struct bfnode {
+    struct bfinst value;
+    struct bfnode* next;
+};
+
+
 
 int main() {
     clock_t clock_start = clock();
@@ -28,6 +34,8 @@ int main() {
 
     __attribute__((aligned(bfalign))) char file_data[bfsize];
     __attribute__((aligned(bfalign))) char bf_mem[bfsize];
+    static struct bfnode bf_nodes[bfsize];
+    static bfint bf_nodes_size;
 
     FILE* file_ptr = fopen("data.txt", "r");
     bfint file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
