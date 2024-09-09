@@ -11,8 +11,8 @@
 #define bfint uint32_t
 #define bfalign 4
 
-enum e_bfinst {
-    nop,
+enum bfinst_kind {
+    bfinst_kind_nop,
 };
 struct bfinst{
     enum e_bfinst inst;
