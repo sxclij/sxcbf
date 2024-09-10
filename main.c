@@ -30,6 +30,7 @@ enum bfinst_kind {
 };
 struct bfinst {
     enum bfinst_kind inst;
+    uint8_t jit;
     union {
         bfint i16;
         int8_t i8[2];
@@ -189,33 +190,7 @@ int main() {
             itr = itr->next;
         }
     }
-    for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
-        struct bfinst itr0 = bfnode_provide(itr, 0);
-        struct bfinst itr1 = bfnode_provide(itr, 1);
-        struct bfinst itr2 = bfnode_provide(itr, 2);
-        if (0) {
-        }
-        // if (itr0.inst == bfinst_kind_add_val &&
-        //     itr1.inst == bfinst_kind_add_ptr &&
-        //     (-256 < itr0.data.i16 || itr0.data.i16 < 256) &&
-        //     (-256 < itr1.data.i16 || itr1.data.i16 < 256)) {
-        //     itr->value.inst = bfinst_kind_vp;
-        //     itr->value.data.i8[0] = itr0.data.i16;
-        //     itr->value.data.i8[1] = itr1.data.i16;
-        //     bfnode_skip(itr, 1);
-        // } else if (itr0.inst == bfinst_kind_add_ptr &&
-        //            itr1.inst == bfinst_kind_add_val &&
-        //            (-256 < itr0.data.i16 || itr0.data.i16 < 256) &&
-        //            (-256 < itr1.data.i16 || itr1.data.i16 < 256)) {
-        //     itr->value.inst = bfinst_kind_pv;
-        //     itr->value.data.i8[0] = itr0.data.i16;
-        //     itr->value.data.i8[1] = itr1.data.i16;
-        //     bfnode_skip(itr, 1);
-        else {
-            itr = itr->next;
-        }
-    }
-
+    
     // inst to mem
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null; itr = itr->next) {
         bf_inst[bf_inst_size++] = itr->value;
