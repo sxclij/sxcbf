@@ -71,6 +71,7 @@ int main() {
     file_data[file_size] = '\0';
     fclose(file_ptr);
 
+    // to original inst
     for (bfint i = 0; i < file_size; i++) {
         struct bfnode* this = &bf_nodes[bf_nodes_size];
         this->next = &bf_nodes[++bf_nodes_size];
@@ -103,6 +104,8 @@ int main() {
             this->value.data = 0;
         }
     }
+
+    // optimize
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
         struct bfinst itr0 = bfnode_provide(itr, 0);
         struct bfinst itr1 = bfnode_provide(itr, 1);
@@ -162,9 +165,12 @@ int main() {
         }
     }
 
+    // inst to mem
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null; itr = itr->next) {
         bf_insts[bf_inst_size++] = itr->value;
     }
+
+    // link
     for (bfint i = 0; bf_insts[i].inst != bfinst_kind_null; i++) {
         if (bf_insts[i].inst == bfinst_kind_while_start) {
             bf_nodes_stack[bf_nodes_stack_size++] = i;
@@ -174,6 +180,8 @@ int main() {
             bf_insts[bf_nodes_stack[bf_nodes_stack_size]].data = i;
         }
     }
+
+    // execute
     for (; bf_insts[bf_ip].inst != bfinst_kind_null; bf_ip++) {
         if (bf_insts[bf_ip].inst == bfinst_kind_add_val) {
             bf_mem[bf_ap] += bf_insts[bf_ip].data;
@@ -189,7 +197,7 @@ int main() {
             bf_mem[bf_ap] = 0;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_zeros) {
             memset(bf_mem + bf_ap, 0, bf_insts[bf_ip].data * sizeof(char));
-            bf_ap += bf_insts[bf_ip].data-1;
+            bf_ap += bf_insts[bf_ip].data - 1;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_drain) {
             bf_mem[bf_ap + bf_insts[bf_ip].data] += bf_mem[bf_ap];
             bf_mem[bf_ap] = 0;
