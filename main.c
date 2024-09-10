@@ -20,7 +20,7 @@ enum bfinst_kind {
     bfinst_kind_while_end,
     bfinst_kind_io_out,
     bfinst_kind_io_in,
-    bfinst_kind_end,
+    bfinst_kind_zero,
 };
 struct bfinst {
     enum bfinst_kind inst;
@@ -31,6 +31,13 @@ struct bfnode {
     struct bfnode* next;
 };
 
+struct bfinst bfnode_provide(struct bfnode* this, bfint n) {
+    struct bfnode* result = this;
+    for (bfint i = 0; i < n; i++) {
+        result = result->next;
+    }
+    return result->value;
+}
 int main() {
     clock_t clock_start = clock();
 
@@ -85,12 +92,13 @@ int main() {
         }
     }
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
+        struct bfinst a = bfnode_provide(itr, 1);
         if (itr->next->value.inst == bfinst_kind_nop) {
             itr->next = itr->next->next;
-        } else if (itr->value.inst == bfinst_kind_add_val && itr->next->value.inst == bfinst_kind_add_val) {
+        } else if (itr->value.inst == bfinst_kind_add_val && bfnode_provide(itr, 1).inst == bfinst_kind_add_val) {
             itr->value.val += itr->next->value.val;
             itr->next = itr->next->next;
-        } else if (itr->value.inst == bfinst_kind_add_ptr && itr->next->value.inst == bfinst_kind_add_ptr) {
+        } else if (itr->value.inst == bfinst_kind_add_ptr && bfnode_provide(itr, 1).inst == bfinst_kind_add_ptr) {
             itr->value.val += itr->next->value.val;
             itr->next = itr->next->next;
         } else {
@@ -105,7 +113,7 @@ int main() {
             bf_nodes_stack[bf_nodes_stack_size++] = i;
         }
         if (bf_insts[i].inst == bfinst_kind_while_end) {
-            bf_insts[i].val = bf_nodes_stack[--bf_nodes_stack_size]-1;
+            bf_insts[i].val = bf_nodes_stack[--bf_nodes_stack_size] - 1;
             bf_insts[bf_nodes_stack[bf_nodes_stack_size]].val = i;
         }
     }
