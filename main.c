@@ -21,11 +21,11 @@ enum bfinst_kind {
     bfinst_kind_io_out,
     bfinst_kind_io_in,
     bfinst_kind_zero,
-    bfinst_kind_mov,
+    bfinst_kind_drain,
 };
 struct bfinst {
     enum bfinst_kind inst;
-    bfint val;
+    bfint data;
 };
 struct bfnode {
     struct bfinst value;
@@ -75,31 +75,31 @@ int main() {
         this->next = &bf_nodes[++bf_nodes_size];
         if (file_data[i] == '+') {
             this->value.inst = bfinst_kind_add_val;
-            this->value.val = 1;
+            this->value.data = 1;
         } else if (file_data[i] == '-') {
             this->value.inst = bfinst_kind_add_val;
-            this->value.val = -1;
+            this->value.data = -1;
         } else if (file_data[i] == '>') {
             this->value.inst = bfinst_kind_add_ptr;
-            this->value.val = 1;
+            this->value.data = 1;
         } else if (file_data[i] == '<') {
             this->value.inst = bfinst_kind_add_ptr;
-            this->value.val = -1;
+            this->value.data = -1;
         } else if (file_data[i] == '[') {
             this->value.inst = bfinst_kind_while_start;
-            this->value.val = 0;
+            this->value.data = 0;
         } else if (file_data[i] == ']') {
             this->value.inst = bfinst_kind_while_end;
-            this->value.val = 0;
+            this->value.data = 0;
         } else if (file_data[i] == '.') {
             this->value.inst = bfinst_kind_io_out;
-            this->value.val = 0;
+            this->value.data = 0;
         } else if (file_data[i] == ',') {
             this->value.inst = bfinst_kind_io_in;
-            this->value.val = 0;
+            this->value.data = 0;
         } else {
             this->value.inst = bfinst_kind_nop;
-            this->value.val = 0;
+            this->value.data = 0;
         }
     }
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
@@ -113,11 +113,11 @@ int main() {
             bfnode_skip(itr, 1);
         } else if (itr0.inst == bfinst_kind_add_val &&
                    itr1.inst == bfinst_kind_add_val) {
-            itr->value.val += itr->next->value.val;
+            itr->value.data += itr->next->value.data;
             bfnode_skip(itr, 1);
         } else if (itr0.inst == bfinst_kind_add_ptr &&
                    itr1.inst == bfinst_kind_add_ptr) {
-            itr->value.val += itr->next->value.val;
+            itr->value.data += itr->next->value.data;
             bfnode_skip(itr, 1);
         } else if (itr0.inst == bfinst_kind_while_start &&
                    itr1.inst == bfinst_kind_add_val &&
@@ -136,14 +136,15 @@ int main() {
         struct bfinst itr4 = bfnode_provide(itr, 4);
         struct bfinst itr5 = bfnode_provide(itr, 5);
         if (itr0.inst == bfinst_kind_while_start &&
-                   itr1.inst == bfinst_kind_add_val &&
-                   itr2.inst == bfinst_kind_add_ptr &&
-                   itr3.inst == bfinst_kind_add_val &&
-                   itr4.inst == bfinst_kind_add_ptr &&
-                   itr5.inst == bfinst_kind_while_end &&
-                   itr2.val + itr4.val == 0) {
-            itr->value.inst = bfinst_kind_mov;
-            itr->value.val = itr2.val;
+            itr1.inst == bfinst_kind_add_val &&
+            itr2.inst == bfinst_kind_add_ptr &&
+            itr3.inst == bfinst_kind_add_val &&
+            itr4.inst == bfinst_kind_add_ptr &&
+            itr5.inst == bfinst_kind_while_end &&
+            itr2.data + itr4.data == 0 &&
+            itr1.data + itr3.data == 0) {
+            itr->value.inst = bfinst_kind_drain;
+            itr->value.data = itr2.data;
             bfnode_skip(itr, 5);
         } else {
             itr = itr->next;
@@ -157,25 +158,25 @@ int main() {
             bf_nodes_stack[bf_nodes_stack_size++] = i;
         }
         if (bf_insts[i].inst == bfinst_kind_while_end) {
-            bf_insts[i].val = bf_nodes_stack[--bf_nodes_stack_size] - 1;
-            bf_insts[bf_nodes_stack[bf_nodes_stack_size]].val = i;
+            bf_insts[i].data = bf_nodes_stack[--bf_nodes_stack_size] - 1;
+            bf_insts[bf_nodes_stack[bf_nodes_stack_size]].data = i;
         }
     }
     for (; bf_insts[bf_ip].inst != bfinst_kind_null; bf_ip++) {
         if (bf_insts[bf_ip].inst == bfinst_kind_add_val) {
-            bf_mem[bf_ap] += bf_insts[bf_ip].val;
+            bf_mem[bf_ap] += bf_insts[bf_ip].data;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_add_ptr) {
-            bf_ap += bf_insts[bf_ip].val;
+            bf_ap += bf_insts[bf_ip].data;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_while_start) {
             if (bf_mem[bf_ap] == 0) {
-                bf_ip = bf_insts[bf_ip].val;
+                bf_ip = bf_insts[bf_ip].data;
             }
         } else if (bf_insts[bf_ip].inst == bfinst_kind_while_end) {
-            bf_ip = bf_insts[bf_ip].val;
+            bf_ip = bf_insts[bf_ip].data;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_zero) {
             bf_mem[bf_ap] = 0;
-        } else if (bf_insts[bf_ip].inst == bfinst_kind_mov) {
-            bf_mem[bf_ap + bf_insts[bf_ip].val] += bf_mem[bf_ap];
+        } else if (bf_insts[bf_ip].inst == bfinst_kind_drain) {
+            bf_mem[bf_ap + bf_insts[bf_ip].data] += bf_mem[bf_ap];
             bf_mem[bf_ap] = 0;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_io_out) {
             putchar(bf_mem[bf_ap]);
