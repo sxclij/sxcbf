@@ -42,7 +42,7 @@ int main() {
     __attribute__((aligned(bfalign))) struct bfinst bf_insts[bfsize];
     static char file_data[bfsize];
     static struct bfnode bf_nodes[bfsize];
-    static struct bfnode* bf_nodes_stack[bfsize];
+    static bfint bf_nodes_stack[bfsize];
     static bfint bf_inst_size = 0;
     static bfint bf_nodes_size = 0;
     static bfint bf_nodes_stack_size = 0;
@@ -98,8 +98,15 @@ int main() {
         bf_insts[bf_inst_size++] = itr->value;
     }
     for (bfint i = 0; bf_insts[i].inst != bfinst_kind_null; i++) {
+        if (bf_insts[i].inst == bfinst_kind_while_start) {
+            bf_nodes_stack[bf_nodes_stack_size++] = i;
+        }
+        if (bf_insts[i].inst == bfinst_kind_while_end) {
+            bf_insts[i].val = bf_nodes_stack[--bf_nodes_stack_size];
+            bf_insts[bf_nodes_stack[bf_nodes_stack_size]].val = i;
+        }
     }
-    for (; bf_insts[bf_ip].inst == bfinst_kind_null; bf_ip++) {
+    for (; bf_insts[bf_ip].inst != bfinst_kind_null; bf_ip++) {
         if (bf_insts[bf_ip].inst == bfinst_kind_add_val) {
             bf_mem[bf_ap] += bf_insts[bf_ip].val;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_add_ptr) {
