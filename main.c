@@ -30,7 +30,6 @@ enum bfinst_kind {
 };
 struct bfinst {
     enum bfinst_kind inst;
-    uint8_t jit;
     union {
         bfint i16;
         int8_t i8[2];
@@ -190,7 +189,7 @@ int main() {
             itr = itr->next;
         }
     }
-    
+
     // inst to mem
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null; itr = itr->next) {
         bf_inst[bf_inst_size++] = itr->value;
