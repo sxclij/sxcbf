@@ -1,6 +1,6 @@
-#pragma GCC target("avx")
-#pragma GCC optimize("O3")
-#pragma GCC optimize("unroll-loops")
+// #pragma GCC target("avx")
+// #pragma GCC optimize("O3")
+// #pragma GCC optimize("unroll-loops")
 
 #include <stdint.h>
 #include <stdio.h>
@@ -13,6 +13,7 @@
 
 enum bfinst_kind {
     bfinst_kind_null,
+    bfinst_kind_nop,
     bfinst_kind_add_val,
     bfinst_kind_add_ptr,
     bfinst_kind_while_start,
@@ -57,38 +58,37 @@ int main() {
         if (file_data[i] == '+') {
             this->value.inst = bfinst_kind_add_val;
             this->value.val = 1;
-        }
-        if (file_data[i] == '-') {
+        } else if (file_data[i] == '-') {
             this->value.inst = bfinst_kind_add_val;
             this->value.val = -1;
-        }
-        if (file_data[i] == '>') {
+        } else if (file_data[i] == '>') {
             this->value.inst = bfinst_kind_add_ptr;
             this->value.val = 1;
-        }
-        if (file_data[i] == '<') {
+        } else if (file_data[i] == '<') {
             this->value.inst = bfinst_kind_add_ptr;
             this->value.val = -1;
-        }
-        if (file_data[i] == '[') {
+        } else if (file_data[i] == '[') {
             this->value.inst = bfinst_kind_while_start;
             this->value.val = 0;
-        }
-        if (file_data[i] == ']') {
+        } else if (file_data[i] == ']') {
             this->value.inst = bfinst_kind_while_end;
             this->value.val = 0;
-        }
-        if (file_data[i] == '.') {
+        } else if (file_data[i] == '.') {
             this->value.inst = bfinst_kind_io_out;
             this->value.val = 0;
-        }
-        if (file_data[i] == ',') {
+        } else if (file_data[i] == ',') {
             this->value.inst = bfinst_kind_io_in;
+            this->value.val = 0;
+        } else {
+            this->value.inst = bfinst_kind_nop;
             this->value.val = 0;
         }
     }
-    for (struct bfnode* itr = bf_nodes; itr->value.inst == bfinst_kind_null;) {
-        if (itr->value.inst == bfinst_kind_add_val) {
+    for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
+        if (itr->next->value.inst == bfinst_kind_nop) {
+            itr->next = itr->next->next;
+        }
+        else if (itr->value.inst == bfinst_kind_add_val) {
             if (itr->next->value.inst == bfinst_kind_add_val) {
                 itr->value.val += itr->next->value.val;
                 itr->next = itr->next->next;
@@ -97,8 +97,10 @@ int main() {
             itr = itr->next;
         }
     }
-    for (struct bfnode* itr = bf_nodes; itr->value.inst == bfinst_kind_null; itr = itr->next) {
+    for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null; itr = itr->next) {
         bf_insts[bf_inst_size++] = itr->value;
+    }
+    for (bfint i = 0; bf_insts[i].inst != bfinst_kind_null; i++) {
     }
     for (; bf_insts[bf_ip].inst == bfinst_kind_null; bf_ip++) {
         if (bf_insts[bf_ip].inst == bfinst_kind_add_val) {
