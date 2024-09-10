@@ -196,7 +196,9 @@ int main() {
         } else if (bf_insts[bf_ip].inst == bfinst_kind_zero) {
             bf_mem[bf_ap] = 0;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_zeros) {
-            memset(bf_mem + bf_ap, 0, bf_insts[bf_ip].data * sizeof(char));
+            for(bfint i=0;i<bf_insts[bf_ip].data;i++) {
+                bf_mem[bf_ap+i] = 0;
+            }
             bf_ap += bf_insts[bf_ip].data - 1;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_drain) {
             bf_mem[bf_ap + bf_insts[bf_ip].data] += bf_mem[bf_ap];
