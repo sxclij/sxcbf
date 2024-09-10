@@ -21,6 +21,7 @@ enum bfinst_kind {
     bfinst_kind_io_out,
     bfinst_kind_io_in,
     bfinst_kind_zero,
+    bfinst_kind_zeros,
     bfinst_kind_drain,
 };
 struct bfinst {
@@ -123,7 +124,17 @@ int main() {
                    itr1.inst == bfinst_kind_add_val &&
                    itr2.inst == bfinst_kind_while_end) {
             itr->value.inst = bfinst_kind_zero;
+            itr->value.data = 1;
             bfnode_skip(itr, 2);
+        } else if ((itr0.inst == bfinst_kind_zero || itr0.inst == bfinst_kind_zeros) &&
+                   itr1.inst == bfinst_kind_add_ptr &&
+                   itr2.inst == bfinst_kind_while_start &&
+                   itr3.inst == bfinst_kind_add_val &&
+                   itr4.inst == bfinst_kind_while_end &&
+                   itr1.data == 1) {
+            itr->value.inst = bfinst_kind_zeros;
+            itr->value.data++;
+            bfnode_skip(itr, 4);
         } else {
             itr = itr->next;
         }
@@ -150,6 +161,7 @@ int main() {
             itr = itr->next;
         }
     }
+
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null; itr = itr->next) {
         bf_insts[bf_inst_size++] = itr->value;
     }
@@ -175,6 +187,9 @@ int main() {
             bf_ip = bf_insts[bf_ip].data;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_zero) {
             bf_mem[bf_ap] = 0;
+        } else if (bf_insts[bf_ip].inst == bfinst_kind_zeros) {
+            memset(bf_mem + bf_ap, 0, bf_insts[bf_ip].data * sizeof(char));
+            bf_ap += bf_insts[bf_ip].data-1;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_drain) {
             bf_mem[bf_ap + bf_insts[bf_ip].data] += bf_mem[bf_ap];
             bf_mem[bf_ap] = 0;
