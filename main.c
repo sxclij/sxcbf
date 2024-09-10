@@ -1,6 +1,6 @@
-// #pragma GCC target("avx")
-// #pragma GCC optimize("O3")
-// #pragma GCC optimize("unroll-loops")
+#pragma GCC target("avx")
+#pragma GCC optimize("O3")
+#pragma GCC optimize("unroll-loops")
 
 #include <stdint.h>
 #include <stdio.h>
@@ -36,7 +36,17 @@ struct bfinst bfnode_provide(struct bfnode* this, bfint n) {
     for (bfint i = 0; i < n; i++) {
         result = result->next;
     }
-    return result->value;
+    if (result == NULL) {
+        struct bfinst failed;
+        return failed;
+    } else {
+        return result->value;
+    }
+}
+void bfnode_skip(struct bfnode* this, bfint n) {
+    for(bfint i=0;i<n;i++) {
+        this->next = this->next->next;
+    }
 }
 int main() {
     clock_t clock_start = clock();
@@ -92,15 +102,25 @@ int main() {
         }
     }
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
-        struct bfinst a = bfnode_provide(itr, 1);
+        struct bfinst itr0 = bfnode_provide(itr, 0);
+        struct bfinst itr1 = bfnode_provide(itr, 1);
+        struct bfinst itr2 = bfnode_provide(itr, 2);
+        struct bfinst itr3 = bfnode_provide(itr, 3);
         if (itr->next->value.inst == bfinst_kind_nop) {
-            itr->next = itr->next->next;
-        } else if (itr->value.inst == bfinst_kind_add_val && bfnode_provide(itr, 1).inst == bfinst_kind_add_val) {
+            bfnode_skip(itr,1);
+        } else if (itr0.inst == bfinst_kind_add_val && itr1.inst == bfinst_kind_add_val) {
             itr->value.val += itr->next->value.val;
-            itr->next = itr->next->next;
-        } else if (itr->value.inst == bfinst_kind_add_ptr && bfnode_provide(itr, 1).inst == bfinst_kind_add_ptr) {
+            bfnode_skip(itr,1);
+        } else if (itr0.inst == bfinst_kind_add_ptr && itr1.inst == bfinst_kind_add_ptr) {
             itr->value.val += itr->next->value.val;
-            itr->next = itr->next->next;
+            bfnode_skip(itr,1);
+        } else if (itr0.inst == bfinst_kind_while_start && itr1.inst == bfinst_kind_add_val && itr2.inst == bfinst_kind_while_end) {
+            itr->value.inst = bfinst_kind_zero;
+            bfnode_skip(itr,2);
+        } else if (0) {
+        } else if (0) {
+        } else if (0) {
+        } else if (0) {
         } else {
             itr = itr->next;
         }
@@ -128,6 +148,8 @@ int main() {
             }
         } else if (bf_insts[bf_ip].inst == bfinst_kind_while_end) {
             bf_ip = bf_insts[bf_ip].val;
+        } else if (bf_insts[bf_ip].inst == bfinst_kind_zero) {
+            bf_mem[bf_ap] = 0;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_io_out) {
             putchar(bf_mem[bf_ap]);
         } else if (bf_insts[bf_ip].inst == bfinst_kind_io_in) {
