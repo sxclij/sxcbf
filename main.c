@@ -23,6 +23,8 @@ enum bfinst_kind {
     bfinst_kind_zero,
     bfinst_kind_zeros,
     bfinst_kind_drain,
+    bfinst_kind_forshift,
+    bfinst_kind_vp,
 };
 struct bfinst {
     enum bfinst_kind inst;
@@ -150,13 +152,19 @@ int main() {
         struct bfinst itr4 = bfnode_provide(itr, 4);
         struct bfinst itr5 = bfnode_provide(itr, 5);
         if (itr0.inst == bfinst_kind_while_start &&
-            itr1.inst == bfinst_kind_add_val &&
-            itr2.inst == bfinst_kind_add_ptr &&
-            itr3.inst == bfinst_kind_add_val &&
-            itr4.inst == bfinst_kind_add_ptr &&
-            itr5.inst == bfinst_kind_while_end &&
-            itr2.data + itr4.data == 0 &&
-            itr1.data + itr3.data == 0) {
+            itr1.inst == bfinst_kind_add_ptr &&
+            itr2.inst == bfinst_kind_while_end) {
+            itr->value.inst = bfinst_kind_forshift;
+            itr->value.data = itr1.data;
+            bfnode_skip(itr,2);
+        } else if (itr0.inst == bfinst_kind_while_start &&
+                   itr1.inst == bfinst_kind_add_val &&
+                   itr2.inst == bfinst_kind_add_ptr &&
+                   itr3.inst == bfinst_kind_add_val &&
+                   itr4.inst == bfinst_kind_add_ptr &&
+                   itr5.inst == bfinst_kind_while_end &&
+                   itr2.data + itr4.data == 0 &&
+                   itr1.data + itr3.data == 0) {
             itr->value.inst = bfinst_kind_drain;
             itr->value.data = itr2.data;
             bfnode_skip(itr, 5);
@@ -182,33 +190,49 @@ int main() {
     }
 
     // execute
-    for (; bf_insts[bf_ip].inst != bfinst_kind_null; bf_ip++) {
-        if (bf_insts[bf_ip].inst == bfinst_kind_add_val) {
-            bf_mem[bf_ap] += bf_insts[bf_ip].data;
-        } else if (bf_insts[bf_ip].inst == bfinst_kind_add_ptr) {
-            bf_ap += bf_insts[bf_ip].data;
-        } else if (bf_insts[bf_ip].inst == bfinst_kind_while_start) {
-            if (bf_mem[bf_ap] == 0) {
+    for (;; bf_ip++) {
+        switch (bf_insts[bf_ip].inst) {
+            case bfinst_kind_add_val:
+                bf_mem[bf_ap] += bf_insts[bf_ip].data;
+                break;
+            case bfinst_kind_add_ptr:
+                bf_ap += bf_insts[bf_ip].data;
+                break;
+            case bfinst_kind_while_start:
+                if (bf_mem[bf_ap] == 0) {
+                    bf_ip = bf_insts[bf_ip].data;
+                }
+                break;
+            case bfinst_kind_while_end:
                 bf_ip = bf_insts[bf_ip].data;
-            }
-        } else if (bf_insts[bf_ip].inst == bfinst_kind_while_end) {
-            bf_ip = bf_insts[bf_ip].data;
-        } else if (bf_insts[bf_ip].inst == bfinst_kind_zero) {
-            bf_mem[bf_ap] = 0;
-        } else if (bf_insts[bf_ip].inst == bfinst_kind_zeros) {
-            for(bfint i=0;i<bf_insts[bf_ip].data;i++) {
-                bf_mem[bf_ap+i] = 0;
-            }
-            bf_ap += bf_insts[bf_ip].data - 1;
-        } else if (bf_insts[bf_ip].inst == bfinst_kind_drain) {
-            bf_mem[bf_ap + bf_insts[bf_ip].data] += bf_mem[bf_ap];
-            bf_mem[bf_ap] = 0;
-        } else if (bf_insts[bf_ip].inst == bfinst_kind_io_out) {
-            putchar(bf_mem[bf_ap]);
-        } else if (bf_insts[bf_ip].inst == bfinst_kind_io_in) {
-            bf_mem[bf_ap] = getchar();
+                break;
+            case bfinst_kind_io_out:
+                putchar(bf_mem[bf_ap]);
+                break;
+            case bfinst_kind_io_in:
+                bf_mem[bf_ap] = getchar();
+                break;
+            case bfinst_kind_zero:
+                bf_mem[bf_ap] = 0;
+                break;
+            case bfinst_kind_zeros:
+                for (bfint i = 0; i < bf_insts[bf_ip].data; i++) {
+                    bf_mem[bf_ap + i] = 0;
+                }
+                bf_ap += bf_insts[bf_ip].data - 1;
+                break;
+            case bfinst_kind_drain:
+                bf_mem[bf_ap + bf_insts[bf_ip].data] += bf_mem[bf_ap];
+                bf_mem[bf_ap] = 0;
+                break;
+            case bfinst_kind_forshift:
+                while (bf_mem[bf_ap]) {
+                    bf_ap += bf_insts[bf_ip].data;
+                }
+                break;
+            case bfinst_kind_null:
+                printf("%f\n", (double)(clock() - clock_start) / CLOCKS_PER_SEC);
+                return 0;
         }
     }
-
-    printf("%f\n", (double)(clock() - clock_start) / CLOCKS_PER_SEC);
 }
