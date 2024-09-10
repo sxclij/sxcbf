@@ -90,6 +90,9 @@ int main() {
         } else if (itr->value.inst == bfinst_kind_add_val && itr->next->value.inst == bfinst_kind_add_val) {
             itr->value.val += itr->next->value.val;
             itr->next = itr->next->next;
+        } else if (itr->value.inst == bfinst_kind_add_ptr && itr->next->value.inst == bfinst_kind_add_ptr) {
+            itr->value.val += itr->next->value.val;
+            itr->next = itr->next->next;
         } else {
             itr = itr->next;
         }
@@ -102,7 +105,7 @@ int main() {
             bf_nodes_stack[bf_nodes_stack_size++] = i;
         }
         if (bf_insts[i].inst == bfinst_kind_while_end) {
-            bf_insts[i].val = bf_nodes_stack[--bf_nodes_stack_size];
+            bf_insts[i].val = bf_nodes_stack[--bf_nodes_stack_size]-1;
             bf_insts[bf_nodes_stack[bf_nodes_stack_size]].val = i;
         }
     }
@@ -112,7 +115,7 @@ int main() {
         } else if (bf_insts[bf_ip].inst == bfinst_kind_add_ptr) {
             bf_ap += bf_insts[bf_ip].val;
         } else if (bf_insts[bf_ip].inst == bfinst_kind_while_start) {
-            if (bf_mem[bf_ap] != 0) {
+            if (bf_mem[bf_ap] == 0) {
                 bf_ip = bf_insts[bf_ip].val;
             }
         } else if (bf_insts[bf_ip].inst == bfinst_kind_while_end) {
