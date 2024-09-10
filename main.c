@@ -87,12 +87,9 @@ int main() {
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
         if (itr->next->value.inst == bfinst_kind_nop) {
             itr->next = itr->next->next;
-        }
-        else if (itr->value.inst == bfinst_kind_add_val) {
-            if (itr->next->value.inst == bfinst_kind_add_val) {
-                itr->value.val += itr->next->value.val;
-                itr->next = itr->next->next;
-            }
+        } else if (itr->value.inst == bfinst_kind_add_val && itr->next->value.inst == bfinst_kind_add_val) {
+            itr->value.val += itr->next->value.val;
+            itr->next = itr->next->next;
         } else {
             itr = itr->next;
         }
