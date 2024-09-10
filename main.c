@@ -22,7 +22,8 @@ enum bfinst_kind {
     bfinst_kind_io_in,
     bfinst_kind_zero,
     bfinst_kind_zeros,
-    bfinst_kind_drain,
+    bfinst_kind_pseq,
+    bfinst_kind_ngeq,
     bfinst_kind_forshift,
     bfinst_kind_vp,
     bfinst_kind_pv,
@@ -169,7 +170,19 @@ int main() {
                    itr5.inst == bfinst_kind_while_end &&
                    itr2.data.i16 + itr4.data.i16 == 0 &&
                    itr1.data.i16 + itr3.data.i16 == 0) {
-            itr->value.inst = bfinst_kind_drain;
+            itr->value.inst = bfinst_kind_pseq;
+            itr->value.data.i16 = itr2.data.i16;
+            bfnode_skip(itr, 5);
+        } else if (itr0.inst == bfinst_kind_while_start &&
+                   itr1.inst == bfinst_kind_add_val &&
+                   itr2.inst == bfinst_kind_add_ptr &&
+                   itr3.inst == bfinst_kind_add_val &&
+                   itr4.inst == bfinst_kind_add_ptr &&
+                   itr5.inst == bfinst_kind_while_end &&
+                   itr2.data.i16 + itr4.data.i16 == 0 &&
+                   itr1.data.i16 < 0 &&
+                   itr3.data.i16 < 0) {
+            itr->value.inst = bfinst_kind_ngeq;
             itr->value.data.i16 = itr2.data.i16;
             bfnode_skip(itr, 5);
         } else {
@@ -179,23 +192,26 @@ int main() {
     for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
         struct bfinst itr0 = bfnode_provide(itr, 0);
         struct bfinst itr1 = bfnode_provide(itr, 1);
-        if (itr0.inst == bfinst_kind_add_val &&
-            itr1.inst == bfinst_kind_add_ptr &&
-            (-256 < itr0.data.i16 || itr0.data.i16 < 256) &&
-            (-256 < itr1.data.i16 || itr1.data.i16 < 256)) {
-            itr->value.inst = bfinst_kind_vp;
-            itr->value.data.i8[0] = itr0.data.i16;
-            itr->value.data.i8[1] = itr1.data.i16;
-            bfnode_skip(itr, 1);
-        } else if (itr0.inst == bfinst_kind_add_ptr &&
-                   itr1.inst == bfinst_kind_add_val &&
-                   (-256 < itr0.data.i16 || itr0.data.i16 < 256) &&
-                   (-256 < itr1.data.i16 || itr1.data.i16 < 256)) {
-            itr->value.inst = bfinst_kind_pv;
-            itr->value.data.i8[0] = itr0.data.i16;
-            itr->value.data.i8[1] = itr1.data.i16;
-            bfnode_skip(itr, 1);
-        } else {
+        struct bfinst itr2 = bfnode_provide(itr, 2);
+        if (0) {
+        }
+        // if (itr0.inst == bfinst_kind_add_val &&
+        //     itr1.inst == bfinst_kind_add_ptr &&
+        //     (-256 < itr0.data.i16 || itr0.data.i16 < 256) &&
+        //     (-256 < itr1.data.i16 || itr1.data.i16 < 256)) {
+        //     itr->value.inst = bfinst_kind_vp;
+        //     itr->value.data.i8[0] = itr0.data.i16;
+        //     itr->value.data.i8[1] = itr1.data.i16;
+        //     bfnode_skip(itr, 1);
+        // } else if (itr0.inst == bfinst_kind_add_ptr &&
+        //            itr1.inst == bfinst_kind_add_val &&
+        //            (-256 < itr0.data.i16 || itr0.data.i16 < 256) &&
+        //            (-256 < itr1.data.i16 || itr1.data.i16 < 256)) {
+        //     itr->value.inst = bfinst_kind_pv;
+        //     itr->value.data.i8[0] = itr0.data.i16;
+        //     itr->value.data.i8[1] = itr1.data.i16;
+        //     bfnode_skip(itr, 1);
+        else {
             itr = itr->next;
         }
     }
@@ -242,8 +258,12 @@ int main() {
             case bfinst_kind_zero:
                 bf_mem[bf_ap] = 0;
                 break;
-            case bfinst_kind_drain:
+            case bfinst_kind_pseq:
                 bf_mem[bf_ap + bf_inst[bf_ip].data.i16] += bf_mem[bf_ap];
+                bf_mem[bf_ap] = 0;
+                break;
+            case bfinst_kind_ngeq:
+                bf_mem[bf_ap + bf_inst[bf_ip].data.i16] -= bf_mem[bf_ap];
                 bf_mem[bf_ap] = 0;
                 break;
             case bfinst_kind_forshift:
