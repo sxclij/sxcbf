@@ -39,6 +39,9 @@ struct bfnode {
     struct bfinst value;
     struct bfnode* next;
 };
+struct bfmem {
+    uint8_t data;
+};
 
 struct bfinst bfnode_provide(struct bfnode* this, bfint n) {
     struct bfnode* result = this;
@@ -64,7 +67,7 @@ int main() {
     bfint bf_ip = 0;
     bfint nest = 1;
 
-    __attribute__((aligned(bfalign))) char bf_mem[bfsize];
+    __attribute__((aligned(bfalign))) struct bfmem bf_mem[bfsize];
     __attribute__((aligned(bfalign))) struct bfinst bf_inst[bfsize];
     static char file_data[bfsize];
     static struct bfnode bf_nodes[bfsize];
@@ -210,13 +213,13 @@ int main() {
     for (;; bf_ip++) {
         switch (bf_inst[bf_ip].inst) {
             case bfinst_kind_add_val:
-                bf_mem[bf_ap] += bf_inst[bf_ip].data.i16;
+                bf_mem[bf_ap].data += bf_inst[bf_ip].data.i16;
                 break;
             case bfinst_kind_add_ptr:
                 bf_ap += bf_inst[bf_ip].data.i16;
                 break;
             case bfinst_kind_while_start:
-                if (bf_mem[bf_ap] == 0) {
+                if (bf_mem[bf_ap].data == 0) {
                     bf_ip = bf_inst[bf_ip].data.i16;
                 }
                 break;
@@ -224,30 +227,30 @@ int main() {
                 bf_ip = bf_inst[bf_ip].data.i16;
                 break;
             case bfinst_kind_io_out:
-                putchar(bf_mem[bf_ap]);
+                putchar(bf_mem[bf_ap].data);
                 break;
             case bfinst_kind_io_in:
-                bf_mem[bf_ap] = getchar();
+                bf_mem[bf_ap].data = getchar();
                 break;
             case bfinst_kind_zero:
-                bf_mem[bf_ap] = 0;
+                bf_mem[bf_ap].data = 0;
                 break;
             case bfinst_kind_pseq:
-                bf_mem[bf_ap + bf_inst[bf_ip].data.i16] += bf_mem[bf_ap];
-                bf_mem[bf_ap] = 0;
+                bf_mem[bf_ap + bf_inst[bf_ip].data.i16].data += bf_mem[bf_ap].data;
+                bf_mem[bf_ap].data = 0;
                 break;
             case bfinst_kind_ngeq:
-                bf_mem[bf_ap + bf_inst[bf_ip].data.i16] -= bf_mem[bf_ap];
-                bf_mem[bf_ap] = 0;
+                bf_mem[bf_ap + bf_inst[bf_ip].data.i16].data -= bf_mem[bf_ap].data;
+                bf_mem[bf_ap].data = 0;
                 break;
             case bfinst_kind_forshift:
-                while (bf_mem[bf_ap]) {
+                while (bf_mem[bf_ap].data) {
                     bf_ap += bf_inst[bf_ip].data.i16;
                 }
                 break;
             case bfinst_kind_zeros:
                 for (bfint i = 0; i < bf_inst[bf_ip].data.i16; i++) {
-                    bf_mem[bf_ap + i] = 0;
+                    bf_mem[bf_ap + i].data = 0;
                 }
                 bf_ap += bf_inst[bf_ip].data.i16 - 1;
                 break;
