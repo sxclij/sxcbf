@@ -197,8 +197,11 @@ int main() {
                    itr1.data == -1 &&
                    itr2.data + itr4.data + itr6.data == 0) {
             itr->value.inst = bfinst_kind_pseq2;
-
-            bfnode_skip(itr, 5);
+            itr[1].value.data = itr2.data;
+            itr[2].value.data = itr3.data;
+            itr[3].value.data = itr4.data;
+            itr[4].value.data = itr5.data;
+            bfnode_skip(itr, 3);
         } else {
             itr = itr->next;
         }
@@ -255,7 +258,7 @@ int main() {
                 bf_mem[bf_ap].data = 0;
                 break;
             case bfinst_kind_pseq2:
-                bf_mem[bf_ap + bf_inst[bf_ip + 1].data].data += bf_mem[bf_ap].data * bf_ap + bf_inst[bf_ip + 3].data;
+                bf_mem[bf_ap + bf_inst[bf_ip + 1].data].data += bf_mem[bf_ap].data * bf_ap + bf_inst[bf_ip + 2].data;
                 bf_mem[bf_ap + bf_inst[bf_ip + 3].data].data += bf_mem[bf_ap].data * bf_ap + bf_inst[bf_ip + 4].data;
                 bf_mem[bf_ap].data = 0;
                 bf_ip += 4;
