@@ -1,6 +1,6 @@
-// #pragma GCC target("avx")
-// #pragma GCC optimize("O3")
-// #pragma GCC optimize("unroll-loops")
+#pragma GCC target("avx")
+#pragma GCC optimize("O3")
+#pragma GCC optimize("unroll-loops")
 
 #include <stdint.h>
 #include <stdio.h>
@@ -61,7 +61,6 @@ int main() {
 
     bfint bf_ap = 0;
     bfint bf_ip = 0;
-    bfint nest = 1;
 
     __attribute__((aligned(bfalign))) struct bfmem bf_mem[bfsize];
     __attribute__((aligned(bfalign))) struct bfinst bf_inst[bfsize];
