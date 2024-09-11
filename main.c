@@ -194,9 +194,8 @@ int main() {
                    itr5.inst == bfinst_kind_add_val &&
                    itr6.inst == bfinst_kind_add_ptr &&
                    itr7.inst == bfinst_kind_while_end &&
-                   itr0.data == -1 &&
-                   
-                   ) {
+                   itr1.data == -1 &&
+                   itr2.data + itr4.data + itr6.data == 0) {
             itr->value.inst = bfinst_kind_pseq2;
 
             bfnode_skip(itr, 5);
