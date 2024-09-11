@@ -251,14 +251,6 @@ int main() {
                 }
                 bf_ap += bf_inst[bf_ip].data.i16 - 1;
                 break;
-            case bfinst_kind_vp:
-                bf_mem[bf_ap] += bf_inst[bf_ip].data.i8[0];
-                bf_ap += bf_inst[bf_ip].data.i8[1];
-                break;
-            case bfinst_kind_pv:
-                bf_ap += bf_inst[bf_ip].data.i8[0];
-                bf_mem[bf_ap] += bf_inst[bf_ip].data.i8[1];
-                break;
             case bfinst_kind_null:
                 printf("%f\n", (double)(clock() - clock_start) / CLOCKS_PER_SEC);
                 return 0;
