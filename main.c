@@ -34,7 +34,6 @@ struct bfinst {
         bfint i16;
         int8_t i8[2];
     } data;
-    uint16_t jit;
 };
 struct bfnode {
     struct bfinst value;
