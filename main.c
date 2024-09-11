@@ -41,6 +41,7 @@ struct bfnode {
 };
 struct bfmem {
     uint8_t data;
+    uint8_t jit;
 };
 
 struct bfinst bfnode_provide(struct bfnode* this, bfint n) {
