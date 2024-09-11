@@ -199,10 +199,10 @@ int main() {
             itr->value.inst = bfinst_kind_pseq2;
             itr[0].value.data = itr2.data;
             itr[1].value.data = itr3.data;
-            itr[2].value.data = itr4.data;
+            itr[2].value.data = itr2.data + itr4.data;
             itr[3].value.data = itr5.data;
             itr = itr->next->next->next;
-            bfnode_skip(itr, 3);
+            bfnode_skip(itr, 4);
         } else {
             itr = itr->next;
         }
@@ -259,9 +259,14 @@ int main() {
                 bf_mem[bf_ap].data = 0;
                 break;
             case bfinst_kind_pseq2:
-                bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;
-                bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;
-                bf_mem[bf_ap].data = 0;
+                while(bf_mem[bf_ap].data) {
+                    bf_mem[bf_ap].data--;
+                    bf_mem[bf_ap+bf_inst[bf_ip+0].data].data += bf_inst[bf_ip+1].data;
+                    bf_mem[bf_ap+bf_inst[bf_ip+2].data].data += bf_inst[bf_ip+3].data;
+                }
+                // bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;
+                // bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;
+                // bf_mem[bf_ap].data = 0;
                 bf_ip += 3;
                 break;
             case bfinst_kind_forshift:
