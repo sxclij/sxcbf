@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #define bfsize (1 << 14)
 #define bfint int16_t
@@ -71,10 +72,8 @@ int main() {
     static bfint bf_nodes_size = 0;
     static bfint bf_nodes_stack_size = 0;
 
-    FILE* file_ptr = fopen("data.txt", "r");
-    bfint file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
-    file_data[file_size] = '\0';
-    fclose(file_ptr);
+    bfint file_size = read(0, file_data, bfsize);
+    
 
     // to original inst
     for (bfint i = 0; i < file_size; i++) {
