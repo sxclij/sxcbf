@@ -195,15 +195,15 @@ int main() {
                    itr6.inst == bfinst_kind_add_ptr &&
                    itr7.inst == bfinst_kind_while_end &&
                    itr1.data == -1 &&
-                   itr4.data == 1 &&
-                   itr6.data == 1 &&
                    itr2.data + itr4.data + itr6.data == 0) {
             itr->value.inst = bfinst_kind_pseq2;
-            itr[0].value.data = itr2.data;
-            itr[1].value.data = itr3.data;
-            itr[2].value.data = itr2.data + itr4.data;
-            itr[3].value.data = itr5.data;
-            itr = itr->next->next->next;
+            itr->value.data = itr2.data;
+            itr = itr->next;
+            itr->value.data = itr3.data;
+            itr = itr->next;
+            itr->value.data = itr2.data + itr4.data;
+            itr = itr->next;
+            itr->value.data = itr5.data;
             bfnode_skip(itr, 4);
         } else {
             itr = itr->next;
@@ -261,14 +261,9 @@ int main() {
                 bf_mem[bf_ap].data = 0;
                 break;
             case bfinst_kind_pseq2:
-                while (bf_mem[bf_ap].data) {
-                    bf_mem[bf_ap].data--;
-                    bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_inst[bf_ip + 1].data;
-                    bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_inst[bf_ip + 3].data;
-                }
-                // bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;
-                // bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;
-                // bf_mem[bf_ap].data = 0;
+                bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;
+                bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;
+                bf_mem[bf_ap].data = 0;
                 bf_ip += 3;
                 break;
             case bfinst_kind_forshift:
