@@ -34,6 +34,7 @@ struct bfinst {
         bfint i16;
         int8_t i8[2];
     } data;
+    uint16_t jit;
 };
 struct bfnode {
     struct bfinst value;
@@ -41,7 +42,6 @@ struct bfnode {
 };
 struct bfmem {
     uint8_t data;
-    uint8_t jit;
 };
 
 struct bfinst bfnode_provide(struct bfnode* this, bfint n) {
