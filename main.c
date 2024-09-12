@@ -22,8 +22,7 @@ enum bfinst_kind {
     bfinst_kind_io_in,
     bfinst_kind_zero,
     bfinst_kind_zeros,
-    bfinst_kind_distribution,
-    bfinst_kind_ngeq,
+    bfinst_kind_distribution1,
     bfinst_kind_distribution2,
     bfinst_kind_forshift,
 };
@@ -170,7 +169,7 @@ int main() {
                    itr5.inst == bfinst_kind_while_end &&
                    itr2.data + itr4.data == 0 &&
                    itr1.data + itr3.data == 0) {
-            itr->value.inst = bfinst_kind_distribution;
+            itr->value.inst = bfinst_kind_distribution1;
             itr->value.data = itr2.data;
             bfnode_skip(itr, 5);
         } else if (itr0.inst == bfinst_kind_while_start &&
@@ -251,12 +250,8 @@ int main() {
             case bfinst_kind_zero:
                 bf_mem[bf_ap].data = 0;
                 break;
-            case bfinst_kind_distribution:
+            case bfinst_kind_distribution1:
                 bf_mem[bf_ap + bf_inst[bf_ip].data].data += bf_mem[bf_ap].data;
-                bf_mem[bf_ap].data = 0;
-                break;
-            case bfinst_kind_ngeq:
-                bf_mem[bf_ap + bf_inst[bf_ip].data].data -= bf_mem[bf_ap].data;
                 bf_mem[bf_ap].data = 0;
                 break;
             case bfinst_kind_distribution2:
