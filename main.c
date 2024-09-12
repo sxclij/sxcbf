@@ -273,17 +273,17 @@ int main() {
                 bf_mem[bf_ap].data = 0;
                 break;
             case bfinst_kind_vp:
-                bf_mem[bf_ap].data += bf_inst[bf_ip].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip+0].data;
                 bf_ap += bf_inst[bf_ip + 1].data;
                 bf_ip += 1;
                 break;
             case bfinst_kind_pv:
-                bf_ap += bf_inst[bf_ip].data;
+                bf_ap += bf_inst[bf_ip+0].data;
                 bf_mem[bf_ap].data += bf_inst[bf_ip + 1].data;
                 bf_ip += 1;
                 break;
             case bfinst_kind_vpvp:
-                bf_mem[bf_ap].data += bf_inst[bf_ip].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip+0].data;
                 bf_ap += bf_inst[bf_ip + 1].data;
                 bf_mem[bf_ap].data += bf_inst[bf_ip].data;
                 bf_ap += bf_inst[bf_ip + 1].data;
