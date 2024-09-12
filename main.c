@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+
+// #define atcoder
 
 #define bfsize (1 << 14)
 #define bfint int16_t
@@ -22,6 +25,10 @@ enum bfinst_kind {
     bfinst_kind_io_in,
     bfinst_kind_zero,
     bfinst_kind_zeros,
+    bfinst_kind_vp,
+    bfinst_kind_pv,
+    bfinst_kind_vpvp,
+    bfinst_kind_pvpv,
     bfinst_kind_distribution1,
     bfinst_kind_distribution2,
     bfinst_kind_forshift,
@@ -70,10 +77,14 @@ int main() {
     static bfint bf_nodes_size = 0;
     static bfint bf_nodes_stack_size = 0;
 
+#ifdef atcoder
+    bfint file_size = read(0, file_data, bfsize);
+#else
     FILE* file_ptr = fopen("data.txt", "r");
     bfint file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
     file_data[file_size] = '\0';
     fclose(file_ptr);
+#endif
 
     // to original inst
     for (bfint i = 0; i < file_size; i++) {
@@ -153,6 +164,53 @@ int main() {
         struct bfinst itr3 = bfnode_provide(itr, 3);
         struct bfinst itr4 = bfnode_provide(itr, 4);
         struct bfinst itr5 = bfnode_provide(itr, 5);
+        if (itr0.inst == bfinst_kind_add_val &&
+            itr1.inst == bfinst_kind_add_ptr &&
+            itr2.inst == bfinst_kind_add_val &&
+            itr3.inst == bfinst_kind_add_ptr) {
+            itr->value.inst = bfinst_kind_vpvp;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+        } else if (itr0.inst == bfinst_kind_add_ptr &&
+                   itr1.inst == bfinst_kind_add_val &&
+                   itr2.inst == bfinst_kind_add_ptr &&
+                   itr3.inst == bfinst_kind_add_val) {
+            itr->value.inst = bfinst_kind_pvpv;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+        } else if (itr0.inst == bfinst_kind_add_val &&
+                   itr1.inst == bfinst_kind_add_ptr) {
+            itr->value.inst = bfinst_kind_vp;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+        } else if (itr0.inst == bfinst_kind_add_ptr &&
+                   itr1.inst == bfinst_kind_add_val) {
+            itr->value.inst = bfinst_kind_pv;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+        } else {
+            itr = itr->next;
+        }
+    }
+    for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
+        struct bfinst itr0 = bfnode_provide(itr, 0);
+        struct bfinst itr1 = bfnode_provide(itr, 1);
+        struct bfinst itr2 = bfnode_provide(itr, 2);
+        struct bfinst itr3 = bfnode_provide(itr, 3);
+        struct bfinst itr4 = bfnode_provide(itr, 4);
+        struct bfinst itr5 = bfnode_provide(itr, 5);
         struct bfinst itr6 = bfnode_provide(itr, 6);
         struct bfinst itr7 = bfnode_provide(itr, 7);
         if (itr0.inst == bfinst_kind_while_start &&
@@ -162,10 +220,7 @@ int main() {
             itr->value.data = itr1.data;
             bfnode_skip(itr, 2);
         } else if (itr0.inst == bfinst_kind_while_start &&
-                   itr1.inst == bfinst_kind_add_val &&
-                   itr2.inst == bfinst_kind_add_ptr &&
-                   itr3.inst == bfinst_kind_add_val &&
-                   itr4.inst == bfinst_kind_add_ptr &&
+                   itr1.inst == bfinst_kind_vpvp &&
                    itr5.inst == bfinst_kind_while_end &&
                    itr2.data + itr4.data == 0 &&
                    itr1.data + itr3.data == 0) {
@@ -173,12 +228,8 @@ int main() {
             itr->value.data = itr2.data;
             bfnode_skip(itr, 5);
         } else if (itr0.inst == bfinst_kind_while_start &&
-                   itr1.inst == bfinst_kind_add_val &&
-                   itr2.inst == bfinst_kind_add_ptr &&
-                   itr3.inst == bfinst_kind_add_val &&
-                   itr4.inst == bfinst_kind_add_ptr &&
-                   itr5.inst == bfinst_kind_add_val &&
-                   itr6.inst == bfinst_kind_add_ptr &&
+                   itr1.inst == bfinst_kind_vpvp &&
+                   itr5.inst == bfinst_kind_vp &&
                    itr7.inst == bfinst_kind_while_end &&
                    itr1.data == -1 &&
                    itr2.data + itr4.data + itr6.data == 0) {
@@ -237,6 +288,30 @@ int main() {
                 break;
             case bfinst_kind_zero:
                 bf_mem[bf_ap].data = 0;
+                break;
+            case bfinst_kind_vp:
+                bf_mem[bf_ap].data += bf_inst[bf_ip + 0].data;
+                bf_ap += bf_inst[bf_ip + 1].data;
+                bf_ip += 1;
+                break;
+            case bfinst_kind_pv:
+                bf_ap += bf_inst[bf_ip + 0].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip + 1].data;
+                bf_ip += 1;
+                break;
+            case bfinst_kind_vpvp:
+                bf_mem[bf_ap].data += bf_inst[bf_ip + 0].data;
+                bf_ap += bf_inst[bf_ip + 1].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip + 2].data;
+                bf_ap += bf_inst[bf_ip + 3].data;
+                bf_ip += 3;
+                break;
+            case bfinst_kind_pvpv:
+                bf_ap += bf_inst[bf_ip + 0].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip + 1].data;
+                bf_ap += bf_inst[bf_ip + 2].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip + 3].data;
+                bf_ip += 3;
                 break;
             case bfinst_kind_distribution1:
                 bf_mem[bf_ap + bf_inst[bf_ip].data].data += bf_mem[bf_ap].data;
