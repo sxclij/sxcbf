@@ -24,6 +24,8 @@ enum bfinst_kind {
     bfinst_kind_zeros,
     bfinst_kind_vp,
     bfinst_kind_pv,
+    bfinst_kind_vpvp,
+    bfinst_kind_pvpv,
     bfinst_kind_distribution1,
     bfinst_kind_distribution2,
     bfinst_kind_forshift,
@@ -156,7 +158,19 @@ int main() {
         struct bfinst itr4 = bfnode_provide(itr, 4);
         struct bfinst itr5 = bfnode_provide(itr, 5);
         if (itr0.inst == bfinst_kind_add_val &&
-            itr1.inst == bfinst_kind_add_ptr) {
+            itr1.inst == bfinst_kind_add_ptr &&
+            itr2.inst == bfinst_kind_add_val &&
+            itr3.inst == bfinst_kind_add_ptr) {
+            itr->value.inst = bfinst_kind_vpvp;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+        } else if (itr0.inst == bfinst_kind_add_val &&
+                   itr1.inst == bfinst_kind_add_ptr) {
             itr->value.inst = bfinst_kind_vp;
             itr = itr->next;
             itr->value.inst = bfinst_kind_nop;
@@ -260,13 +274,20 @@ int main() {
                 break;
             case bfinst_kind_vp:
                 bf_mem[bf_ap].data += bf_inst[bf_ip].data;
-                bf_ap += bf_inst[bf_ip+1].data;
+                bf_ap += bf_inst[bf_ip + 1].data;
                 bf_ip += 1;
                 break;
             case bfinst_kind_pv:
                 bf_ap += bf_inst[bf_ip].data;
-                bf_mem[bf_ap].data += bf_inst[bf_ip+1].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip + 1].data;
                 bf_ip += 1;
+                break;
+            case bfinst_kind_vpvp:
+                bf_mem[bf_ap].data += bf_inst[bf_ip].data;
+                bf_ap += bf_inst[bf_ip + 1].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip].data;
+                bf_ap += bf_inst[bf_ip + 1].data;
+                bf_ip += 3;
                 break;
             case bfinst_kind_distribution1:
                 bf_mem[bf_ap + bf_inst[bf_ip].data].data += bf_mem[bf_ap].data;
