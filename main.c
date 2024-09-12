@@ -69,14 +69,14 @@ int main() {
     bfint bf_ap = 0;
     bfint bf_ip = 0;
 
-    __attribute__((aligned(bfalign))) struct bfmem bf_mem[bfsize];
-    __attribute__((aligned(bfalign))) struct bfinst bf_inst[bfsize];
+    static __attribute__((aligned(bfalign))) struct bfmem bf_mem[bfsize];
+    static __attribute__((aligned(bfalign))) struct bfinst bf_inst[bfsize];
     static char file_data[bfsize];
     static struct bfnode bf_nodes[bfsize];
     static bfint bf_nodes_stack[bfsize];
-    static bfint bf_inst_size = 0;
-    static bfint bf_nodes_size = 0;
-    static bfint bf_nodes_stack_size = 0;
+    bfint bf_inst_size = 0;
+    bfint bf_nodes_size = 0;
+    bfint bf_nodes_stack_size = 0;
 
 #ifdef atcoder
     bfint file_size = read(0, file_data, bfsize);
