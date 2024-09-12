@@ -6,3 +6,4 @@
 !LICENCE
 !.gitignore
 !.clang-format
+!gened.c
