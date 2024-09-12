@@ -201,8 +201,7 @@ int main() {
             itr->value.data = itr1.data;
             bfnode_skip(itr, 2);
         } else if (itr0.inst == bfinst_kind_while_start &&
-                   itr1.inst == bfinst_kind_vp &&
-                   itr3.inst == bfinst_kind_vp &&
+                   itr1.inst == bfinst_kind_vpvp &&
                    itr5.inst == bfinst_kind_while_end &&
                    itr2.data + itr4.data == 0 &&
                    itr1.data + itr3.data == 0) {
@@ -210,8 +209,7 @@ int main() {
             itr->value.data = itr2.data;
             bfnode_skip(itr, 5);
         } else if (itr0.inst == bfinst_kind_while_start &&
-                   itr1.inst == bfinst_kind_vp &&
-                   itr3.inst == bfinst_kind_vp &&
+                   itr1.inst == bfinst_kind_vpvp &&
                    itr5.inst == bfinst_kind_vp &&
                    itr7.inst == bfinst_kind_while_end &&
                    itr1.data == -1 &&
