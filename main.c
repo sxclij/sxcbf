@@ -22,6 +22,8 @@ enum bfinst_kind {
     bfinst_kind_io_in,
     bfinst_kind_zero,
     bfinst_kind_zeros,
+    bfinst_kind_vp,
+    bfinst_kind_pv,
     bfinst_kind_distribution1,
     bfinst_kind_distribution2,
     bfinst_kind_forshift,
@@ -153,6 +155,29 @@ int main() {
         struct bfinst itr3 = bfnode_provide(itr, 3);
         struct bfinst itr4 = bfnode_provide(itr, 4);
         struct bfinst itr5 = bfnode_provide(itr, 5);
+        if (itr0.inst == bfinst_kind_add_val &&
+            itr1.inst == bfinst_kind_add_ptr) {
+            itr->value.inst = bfinst_kind_vp;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+        } else if (itr0.inst == bfinst_kind_add_ptr &&
+                   itr1.inst == bfinst_kind_add_val) {
+            itr->value.inst = bfinst_kind_pv;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+        } else {
+            itr = itr->next;
+        }
+    }
+    for (struct bfnode* itr = bf_nodes; itr->value.inst != bfinst_kind_null;) {
+        struct bfinst itr0 = bfnode_provide(itr, 0);
+        struct bfinst itr1 = bfnode_provide(itr, 1);
+        struct bfinst itr2 = bfnode_provide(itr, 2);
+        struct bfinst itr3 = bfnode_provide(itr, 3);
+        struct bfinst itr4 = bfnode_provide(itr, 4);
+        struct bfinst itr5 = bfnode_provide(itr, 5);
         struct bfinst itr6 = bfnode_provide(itr, 6);
         struct bfinst itr7 = bfnode_provide(itr, 7);
         if (itr0.inst == bfinst_kind_while_start &&
@@ -237,6 +262,16 @@ int main() {
                 break;
             case bfinst_kind_zero:
                 bf_mem[bf_ap].data = 0;
+                break;
+            case bfinst_kind_vp:
+                bf_mem[bf_ap].data += bf_inst[bf_ip].data;
+                bf_ap += bf_inst[bf_ip+1].data;
+                bf_ip += 1;
+                break;
+            case bfinst_kind_pv:
+                bf_ap += bf_inst[bf_ip].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip+1].data;
+                bf_ip += 1;
                 break;
             case bfinst_kind_distribution1:
                 bf_mem[bf_ap + bf_inst[bf_ip].data].data += bf_mem[bf_ap].data;
