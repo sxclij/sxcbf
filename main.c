@@ -10,6 +10,8 @@
 
 // #define atcoder
 
+#define bfoutsize (1 << 20)
+#define bfinsize (1 << 16)
 #define bfsize (1 << 14)
 #define bfint int16_t
 #define bfalign 4
@@ -71,7 +73,9 @@ int main() {
 
     static __attribute__((aligned(bfalign))) struct bfmem bf_mem[bfsize];
     static __attribute__((aligned(bfalign))) struct bfinst bf_inst[bfsize];
-    static char file_data[bfsize];
+    static char file_out[bfoutsize];
+    static char file_in[bfinsize];
+    static char file_out_cache[bfsize];
     static struct bfnode bf_nodes[bfsize];
     static bfint bf_nodes_stack[bfsize];
     static bfint bf_inst_size = 0;
@@ -79,11 +83,11 @@ int main() {
     static bfint bf_nodes_stack_size = 0;
 
 #ifdef atcoder
-    bfint file_size = read(0, file_data, bfsize);
+    bfint file_size = read(0, file_in, bfsize);
 #else
     FILE* file_ptr = fopen("data.txt", "r");
-    bfint file_size = fread(file_data, sizeof(char), sizeof(file_data), file_ptr);
-    file_data[file_size] = '\0';
+    bfint file_size = fread(file_in, sizeof(char), sizeof(file_in), file_ptr);
+    file_in[file_size] = '\0';
     fclose(file_ptr);
 #endif
 
@@ -91,28 +95,28 @@ int main() {
     for (bfint i = 0; i < file_size; i++) {
         struct bfnode* this = &bf_nodes[bf_nodes_size];
         this->next = &bf_nodes[++bf_nodes_size];
-        if (file_data[i] == '+') {
+        if (file_in[i] == '+') {
             this->value.inst = bfinst_kind_add_val;
             this->value.data = 1;
-        } else if (file_data[i] == '-') {
+        } else if (file_in[i] == '-') {
             this->value.inst = bfinst_kind_add_val;
             this->value.data = -1;
-        } else if (file_data[i] == '>') {
+        } else if (file_in[i] == '>') {
             this->value.inst = bfinst_kind_add_ptr;
             this->value.data = 1;
-        } else if (file_data[i] == '<') {
+        } else if (file_in[i] == '<') {
             this->value.inst = bfinst_kind_add_ptr;
             this->value.data = -1;
-        } else if (file_data[i] == '[') {
+        } else if (file_in[i] == '[') {
             this->value.inst = bfinst_kind_while_start;
             this->value.data = 0;
-        } else if (file_data[i] == ']') {
+        } else if (file_in[i] == ']') {
             this->value.inst = bfinst_kind_while_end;
             this->value.data = 0;
-        } else if (file_data[i] == '.') {
+        } else if (file_in[i] == '.') {
             this->value.inst = bfinst_kind_io_out;
             this->value.data = 0;
-        } else if (file_data[i] == ',') {
+        } else if (file_in[i] == ',') {
             this->value.inst = bfinst_kind_io_in;
             this->value.data = 0;
         } else {
@@ -289,82 +293,80 @@ int main() {
     for (;; bf_ip++) {
         switch (bf_inst[bf_ip].inst) {
             case bfinst_kind_add_val:
-                bf_mem[bf_ap].data += bf_inst[bf_ip].data;
+                sscanf(file_out_cache, "bf_mem[bf_ap].data += %d;", bf_inst[bf_ip].data);
+                strcat(file_out, file_out_cache);
                 break;
             case bfinst_kind_add_ptr:
-                bf_ap += bf_inst[bf_ip].data;
+                sscanf(file_out_cache, "bf_ap += %d;", bf_inst[bf_ip].data);
+                strcat(file_out, file_out_cache);
                 break;
             case bfinst_kind_while_start:
-                if (bf_mem[bf_ap].data == 0) {
-                    bf_ip = bf_inst[bf_ip].data;
-                }
+                sscanf(file_out_cache, "if (bf_mem[bf_ap].data == 0) {bf_ip = %d;}", bf_inst[bf_ip].data);
+                strcat(file_out, file_out_cache);
                 break;
             case bfinst_kind_while_end:
-                bf_ip = bf_inst[bf_ip].data;
+                sscanf(file_out_cache, "bf_ip = %d;", bf_inst[bf_ip].data);
+                strcat(file_out, file_out_cache);
                 break;
             case bfinst_kind_io_out:
-                putchar(bf_mem[bf_ap].data);
+                strcat(file_out, "putchar(bf_mem[bf_ap].data);");
                 break;
             case bfinst_kind_io_in:
-                bf_mem[bf_ap].data = getchar();
+                strcat(file_out, "bf_mem[bf_ap].data = getchar();");
                 break;
             case bfinst_kind_zero:
-                bf_mem[bf_ap].data = 0;
+                strcat(file_out, "bf_mem[bf_ap].data = 0;");
                 break;
             case bfinst_kind_vp:
-                bf_mem[bf_ap].data += bf_inst[bf_ip + 0].data;
-                bf_ap += bf_inst[bf_ip + 1].data;
-                bf_ip += 1;
+                strcat(file_out, "bf_mem[bf_ap].data += bf_inst[bf_ip + 0].data;");
+                strcat(file_out, "bf_ap += bf_inst[bf_ip + 1].data;");
+                strcat(file_out, "bf_ip += 1;");
                 break;
             case bfinst_kind_pv:
-                bf_ap += bf_inst[bf_ip + 0].data;
-                bf_mem[bf_ap].data += bf_inst[bf_ip + 1].data;
-                bf_ip += 1;
+                strcat(file_out, "bf_ap += bf_inst[bf_ip + 0].data;");
+                strcat(file_out, "bf_mem[bf_ap].data += bf_inst[bf_ip + 1].data;");
+                strcat(file_out, "bf_ip += 1;");
                 break;
             case bfinst_kind_vpvp:
-                bf_mem[bf_ap].data += bf_inst[bf_ip + 0].data;
-                bf_ap += bf_inst[bf_ip + 1].data;
-                bf_mem[bf_ap].data += bf_inst[bf_ip + 2].data;
-                bf_ap += bf_inst[bf_ip + 3].data;
-                bf_ip += 3;
+                strcat(file_out, "bf_mem[bf_ap].data += bf_inst[bf_ip + 0].data;");
+                strcat(file_out, "bf_ap += bf_inst[bf_ip + 1].data;");
+                strcat(file_out, "bf_mem[bf_ap].data += bf_inst[bf_ip + 2].data;");
+                strcat(file_out, "bf_ap += bf_inst[bf_ip + 3].data;");
+                strcat(file_out, "bf_ip += 3;");
                 break;
             case bfinst_kind_pvpv:
-                bf_ap += bf_inst[bf_ip + 0].data;
-                bf_mem[bf_ap].data += bf_inst[bf_ip + 1].data;
-                bf_ap += bf_inst[bf_ip + 2].data;
-                bf_mem[bf_ap].data += bf_inst[bf_ip + 3].data;
-                bf_ip += 3;
+                strcat(file_out, "bf_ap += bf_inst[bf_ip + 0].data;");
+                strcat(file_out, "bf_mem[bf_ap].data += bf_inst[bf_ip + 1].data;");
+                strcat(file_out, "bf_ap += bf_inst[bf_ip + 2].data;");
+                strcat(file_out, "bf_mem[bf_ap].data += bf_inst[bf_ip + 3].data;");
+                strcat(file_out, "bf_ip += 3;");
                 break;
             case bfinst_kind_distribution1:
-                bf_mem[bf_ap + bf_inst[bf_ip].data].data += bf_mem[bf_ap].data;
-                bf_mem[bf_ap].data = 0;
+                strcat(file_out, "bf_mem[bf_ap + bf_inst[bf_ip].data].data += bf_mem[bf_ap].data;");
+                strcat(file_out, "bf_mem[bf_ap].data = 0;");
                 break;
             case bfinst_kind_distribution2:
-                bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;
-                bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;
-                bf_mem[bf_ap].data = 0;
-                bf_ip += 3;
+                strcat(file_out, "bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;");
+                strcat(file_out, "bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;");
+                strcat(file_out, "bf_mem[bf_ap].data = 0;");
+                strcat(file_out, "bf_ip += 3;");
                 break;
             case bfinst_kind_distribution3:
-                bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;
-                bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;
-                bf_mem[bf_ap + bf_inst[bf_ip + 4].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 5].data;
-                bf_mem[bf_ap].data = 0;
-                bf_ip += 5;
+                strcat(file_out, "bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;");
+                strcat(file_out, "bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;");
+                strcat(file_out, "bf_mem[bf_ap + bf_inst[bf_ip + 4].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 5].data;");
+                strcat(file_out, "bf_mem[bf_ap].data = 0;");
+                strcat(file_out, "bf_ip += 5;");
                 break;
             case bfinst_kind_forshift:
-                while (bf_mem[bf_ap].data) {
-                    bf_ap += bf_inst[bf_ip].data;
-                }
+                strcat(file_out, "while (bf_mem[bf_ap].data) {bf_ap += bf_inst[bf_ip].data;}");
                 break;
             case bfinst_kind_zeros:
-                for (bfint i = 0; i < bf_inst[bf_ip].data; i++) {
-                    bf_mem[bf_ap + i].data = 0;
-                }
-                bf_ap += bf_inst[bf_ip].data - 1;
+                strcat(file_out, "for (bfint i = 0; i < bf_inst[bf_ip].data; i++) {bf_mem[bf_ap + i].data = 0;}");
+                strcat(file_out, "bf_ap += bf_inst[bf_ip].data - 1;");
                 break;
             case bfinst_kind_null:
-                printf("%f\n", (double)(clock() - clock_start) / CLOCKS_PER_SEC);
+                strcat(file_out, "printf(\"%f\n\", (double)(clock() - clock_start) / CLOCKS_PER_SEC);");
                 return 0;
         }
     }
