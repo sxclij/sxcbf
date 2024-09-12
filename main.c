@@ -43,7 +43,7 @@ struct bfnode {
     struct bfnode* next;
 };
 struct bfmem {
-    uint8_t data;
+    uint32_t data;
 };
 
 struct bfinst bfnode_provide(struct bfnode* this, bfint n) {
@@ -74,9 +74,9 @@ int main() {
     static char file_data[bfsize];
     static struct bfnode bf_nodes[bfsize];
     static bfint bf_nodes_stack[bfsize];
-    bfint bf_inst_size = 0;
-    bfint bf_nodes_size = 0;
-    bfint bf_nodes_stack_size = 0;
+    static bfint bf_inst_size = 0;
+    static bfint bf_nodes_size = 0;
+    static bfint bf_nodes_stack_size = 0;
 
 #ifdef atcoder
     bfint file_size = read(0, file_data, bfsize);
