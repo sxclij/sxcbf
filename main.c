@@ -213,6 +213,8 @@ int main() {
         struct bfinst itr5 = bfnode_provide(itr, 5);
         struct bfinst itr6 = bfnode_provide(itr, 6);
         struct bfinst itr7 = bfnode_provide(itr, 7);
+        struct bfinst itr8 = bfnode_provide(itr, 8);
+        struct bfinst itr9 = bfnode_provide(itr, 9);
         if (itr0.inst == bfinst_kind_while_start &&
             itr1.inst == bfinst_kind_add_ptr &&
             itr2.inst == bfinst_kind_while_end) {
@@ -233,6 +235,21 @@ int main() {
                    itr7.inst == bfinst_kind_while_end &&
                    itr1.data == -1 &&
                    itr2.data + itr4.data + itr6.data == 0) {
+            itr->value.inst = bfinst_kind_distribution2;
+            itr->value.data = itr2.data;
+            itr = itr->next;
+            itr->value.data = itr3.data;
+            itr = itr->next;
+            itr->value.data = itr2.data + itr4.data;
+            itr = itr->next;
+            itr->value.data = itr5.data;
+            bfnode_skip(itr, 4);
+        } else if (itr0.inst == bfinst_kind_while_start &&
+                   itr1.inst == bfinst_kind_vpvp &&
+                   itr5.inst == bfinst_kind_vpvp &&
+                   itr9.inst == bfinst_kind_while_end &&
+                   itr1.data == -1 &&
+                   itr2.data + itr4.data + itr6.data + itr8.data == 0) {
             itr->value.inst = bfinst_kind_distribution2;
             itr->value.data = itr2.data;
             itr = itr->next;
