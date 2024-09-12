@@ -1,6 +1,6 @@
-#pragma GCC target("avx")
-#pragma GCC optimize("O3")
-#pragma GCC optimize("unroll-loops")
+// #pragma GCC target("avx")
+// #pragma GCC optimize("O3")
+// #pragma GCC optimize("unroll-loops")
 
 #include <stdint.h>
 #include <stdio.h>
@@ -13,7 +13,7 @@
 #define bfoutsize (1 << 20)
 #define bfinsize (1 << 16)
 #define bfsize (1 << 14)
-#define bfint int16_t
+#define bfint int32_t
 #define bfalign 4
 
 enum bfinst_kind {
@@ -226,14 +226,14 @@ int main() {
             itr->value.inst = bfinst_kind_forshift;
             itr->value.data = itr1.data;
             bfnode_skip(itr, 2);
-        } else if (itr0.inst == bfinst_kind_while_start &&
-                   itr1.inst == bfinst_kind_vpvp &&
-                   itr5.inst == bfinst_kind_while_end &&
-                   itr2.data + itr4.data == 0 &&
-                   itr1.data + itr3.data == 0) {
-            itr->value.inst = bfinst_kind_distribution1;
-            itr->value.data = itr2.data;
-            bfnode_skip(itr, 5);
+        // } else if (itr0.inst == bfinst_kind_while_start &&
+        //            itr1.inst == bfinst_kind_vpvp &&
+        //            itr5.inst == bfinst_kind_while_end &&
+        //            itr2.data + itr4.data == 0 &&
+        //            itr1.data + itr3.data == 0) {
+        //     itr->value.inst = bfinst_kind_distribution1;
+        //     itr->value.data = itr2.data;
+        //     bfnode_skip(itr, 5);
         } else if (itr0.inst == bfinst_kind_while_start &&
                    itr1.inst == bfinst_kind_vpvp &&
                    itr5.inst == bfinst_kind_vp &&
@@ -293,11 +293,11 @@ int main() {
     for (;; bf_ip++) {
         switch (bf_inst[bf_ip].inst) {
             case bfinst_kind_add_val:
-                sscanf(file_out_cache, "bf_mem[bf_ap].data += %d;", &bf_inst[bf_ip].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap].data += %d;", bf_inst[bf_ip].data);
                 strcat(file_out, file_out_cache);
                 break;
             case bfinst_kind_add_ptr:
-                sscanf(file_out_cache, "bf_ap += %d;", &bf_inst[bf_ip].data);
+                sprintf(file_out_cache, "bf_ap += %d;", bf_inst[bf_ip].data);
                 strcat(file_out, file_out_cache);
                 break;
             case bfinst_kind_while_start:
@@ -316,72 +316,78 @@ int main() {
                 strcat(file_out, "bf_mem[bf_ap].data = 0;");
                 break;
             case bfinst_kind_vp:
-                sscanf(file_out_cache, "bf_mem[bf_ap].data += %d;", &bf_inst[bf_ip + 0].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap].data += %d;", bf_inst[bf_ip + 0].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out_cache, "bf_ap += %d;", &bf_inst[bf_ip + 1].data);
+                sprintf(file_out_cache, "bf_ap += %d;", bf_inst[bf_ip + 1].data);
                 strcat(file_out, file_out_cache);
                 strcat(file_out, "bf_ip += 1;");
+                bf_ip += 1;
                 break;
             case bfinst_kind_pv:
-                sscanf(file_out_cache, "bf_ap += %d;", &bf_inst[bf_ip + 0].data);
+                sprintf(file_out_cache, "bf_ap += %d;", bf_inst[bf_ip + 0].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out_cache, "bf_mem[bf_ap].data += %d;", &bf_inst[bf_ip + 1].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap].data += %d;", bf_inst[bf_ip + 1].data);
                 strcat(file_out, file_out_cache);
                 strcat(file_out, "bf_ip += 1;");
+                bf_ip += 1;
                 break;
             case bfinst_kind_vpvp:
-                sscanf(file_out_cache, "bf_mem[bf_ap].data += %d;", &bf_inst[bf_ip + 0].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap].data += %d;", bf_inst[bf_ip + 0].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out_cache, "bf_ap += %d;", &bf_inst[bf_ip + 1].data);
+                sprintf(file_out_cache, "bf_ap += %d;", bf_inst[bf_ip + 1].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out_cache, "bf_mem[bf_ap].data += %d;", &bf_inst[bf_ip + 2].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap].data += %d;", bf_inst[bf_ip + 2].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out_cache, "bf_ap += %d;", &bf_inst[bf_ip + 3].data);
+                sprintf(file_out_cache, "bf_ap += %d;", bf_inst[bf_ip + 3].data);
                 strcat(file_out, file_out_cache);
                 strcat(file_out, "bf_ip += 3;");
+                bf_ip += 3;
                 break;
             case bfinst_kind_pvpv:
-                sscanf(file_out_cache, "bf_ap += %d;", &bf_inst[bf_ip + 0].data);
+                sprintf(file_out_cache, "bf_ap += %d;", bf_inst[bf_ip + 0].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out_cache, "bf_mem[bf_ap].data += %d;", &bf_inst[bf_ip + 1].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap].data += %d;", bf_inst[bf_ip + 1].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out_cache, "bf_ap += %d;", &bf_inst[bf_ip + 2].data);
+                sprintf(file_out_cache, "bf_ap += %d;", bf_inst[bf_ip + 2].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out_cache, "bf_mem[bf_ap].data += %d;", &bf_inst[bf_ip + 3].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap].data += %d;", bf_inst[bf_ip + 3].data);
                 strcat(file_out, file_out_cache);
                 strcat(file_out, "bf_ip += 3;");
+                bf_ip += 3;
                 break;
             case bfinst_kind_distribution1:
-                sscanf(file_out_cache, "bf_mem[bf_ap + %d].data += bf_mem[bf_ap].data;", &bf_inst[bf_ip].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap + %d].data += bf_mem[bf_ap].data;", bf_inst[bf_ip].data);
                 strcat(file_out, file_out_cache);
                 strcat(file_out, "bf_mem[bf_ap].data = 0;");
                 break;
             case bfinst_kind_distribution2:
-                sscanf(file_out, "bf_mem[bf_ap + %d[bf_ip + 0].data].data += bf_mem[bf_ap].data * %d[bf_ip + 1].data;", &bf_inst[bf_ip + 0].data, &bf_inst[bf_ip + 1].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap + %d].data += bf_mem[bf_ap].data * %d;", bf_inst[bf_ip + 0].data, bf_inst[bf_ip + 1].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out, "bf_mem[bf_ap + %d[bf_ip + 2].data].data += bf_mem[bf_ap].data * %d[bf_ip + 3].data;", &bf_inst[bf_ip + 2].data, &bf_inst[bf_ip + 3].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap + %d].data += bf_mem[bf_ap].data * %d;", bf_inst[bf_ip + 2].data, bf_inst[bf_ip + 3].data);
                 strcat(file_out, file_out_cache);
                 strcat(file_out, "bf_mem[bf_ap].data = 0;");
                 strcat(file_out, "bf_ip += 3;");
+                bf_ip += 3;
                 break;
             case bfinst_kind_distribution3:
-                sscanf(file_out, "bf_mem[bf_ap + %d[bf_ip + 0].data].data += bf_mem[bf_ap].data * %d[bf_ip + 1].data;", &bf_inst[bf_ip + 0].data, &bf_inst[bf_ip + 1].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap + %d].data += bf_mem[bf_ap].data * %d;", bf_inst[bf_ip + 0].data, bf_inst[bf_ip + 1].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out, "bf_mem[bf_ap + %d[bf_ip + 2].data].data += bf_mem[bf_ap].data * %d[bf_ip + 3].data;", &bf_inst[bf_ip + 2].data, &bf_inst[bf_ip + 3].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap + %d].data += bf_mem[bf_ap].data * %d;", bf_inst[bf_ip + 2].data, bf_inst[bf_ip + 3].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out, "bf_mem[bf_ap + %d[bf_ip + 4].data].data += bf_mem[bf_ap].data * %d[bf_ip + 5].data;", &bf_inst[bf_ip + 4].data, &bf_inst[bf_ip + 5].data);
+                sprintf(file_out_cache, "bf_mem[bf_ap + %d].data += bf_mem[bf_ap].data * %d;", bf_inst[bf_ip + 4].data, bf_inst[bf_ip + 5].data);
                 strcat(file_out, file_out_cache);
                 strcat(file_out, "bf_mem[bf_ap].data = 0;");
                 strcat(file_out, "bf_ip += 5;");
+                bf_ip += 5;
                 break;
             case bfinst_kind_forshift:
-                sscanf(file_out, "while (bf_mem[bf_ap].data) {bf_ap += %d;}", &bf_inst[bf_ip].data);
+                sprintf(file_out_cache, "while (bf_mem[bf_ap].data) {bf_ap += %d;}", bf_inst[bf_ip].data);
                 strcat(file_out, file_out_cache);
                 break;
             case bfinst_kind_zeros:
-                sscanf(file_out, "for (bfint i = 0; i < %d; i++) {bf_mem[bf_ap + i].data = 0;}", &bf_inst[bf_ip].data);
+                sprintf(file_out_cache, "for (bfint i = 0; i < %d; i++) {bf_mem[bf_ap + i].data = 0;}", bf_inst[bf_ip].data);
                 strcat(file_out, file_out_cache);
-                sscanf(file_out, "bf_ap += %d - 1;", &bf_inst[bf_ip].data);
+                sprintf(file_out_cache, "bf_ap += %d - 1;", bf_inst[bf_ip].data);
                 strcat(file_out, file_out_cache);
                 break;
             case bfinst_kind_null:
