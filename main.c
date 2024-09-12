@@ -177,18 +177,6 @@ int main() {
                    itr2.inst == bfinst_kind_add_ptr &&
                    itr3.inst == bfinst_kind_add_val &&
                    itr4.inst == bfinst_kind_add_ptr &&
-                   itr5.inst == bfinst_kind_while_end &&
-                   itr2.data + itr4.data == 0 &&
-                   itr1.data < 0 &&
-                   itr3.data < 0) {
-            itr->value.inst = bfinst_kind_ngeq;
-            itr->value.data = itr2.data;
-            bfnode_skip(itr, 5);
-        } else if (itr0.inst == bfinst_kind_while_start &&
-                   itr1.inst == bfinst_kind_add_val &&
-                   itr2.inst == bfinst_kind_add_ptr &&
-                   itr3.inst == bfinst_kind_add_val &&
-                   itr4.inst == bfinst_kind_add_ptr &&
                    itr5.inst == bfinst_kind_add_val &&
                    itr6.inst == bfinst_kind_add_ptr &&
                    itr7.inst == bfinst_kind_while_end &&
