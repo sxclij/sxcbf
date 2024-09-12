@@ -8,7 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define atcoder
+// #define atcoder
 
 #define bfsize (1 << 14)
 #define bfint int16_t
