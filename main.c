@@ -1,6 +1,6 @@
-// #pragma GCC target("avx")
-// #pragma GCC optimize("O3")
-// #pragma GCC optimize("unroll-loops")
+#pragma GCC target("avx")
+#pragma GCC optimize("O3")
+#pragma GCC optimize("unroll-loops")
 
 #include <stdint.h>
 #include <stdio.h>
