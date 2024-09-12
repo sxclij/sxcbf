@@ -169,6 +169,18 @@ int main() {
             itr = itr->next;
             itr->value.inst = bfinst_kind_nop;
             itr = itr->next;
+        } else if (itr0.inst == bfinst_kind_add_ptr &&
+                   itr1.inst == bfinst_kind_add_val &&
+                   itr2.inst == bfinst_kind_add_ptr &&
+                   itr3.inst == bfinst_kind_add_val) {
+            itr->value.inst = bfinst_kind_pvpv;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
+            itr->value.inst = bfinst_kind_nop;
+            itr = itr->next;
         } else if (itr0.inst == bfinst_kind_add_val &&
                    itr1.inst == bfinst_kind_add_ptr) {
             itr->value.inst = bfinst_kind_vp;
@@ -285,6 +297,13 @@ int main() {
                 bf_ap += bf_inst[bf_ip + 1].data;
                 bf_mem[bf_ap].data += bf_inst[bf_ip + 2].data;
                 bf_ap += bf_inst[bf_ip + 3].data;
+                bf_ip += 3;
+                break;
+            case bfinst_kind_pvpv:
+                bf_ap += bf_inst[bf_ip + 0].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip + 1].data;
+                bf_ap += bf_inst[bf_ip + 2].data;
+                bf_mem[bf_ap].data += bf_inst[bf_ip + 3].data;
                 bf_ip += 3;
                 break;
             case bfinst_kind_distribution1:
