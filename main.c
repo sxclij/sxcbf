@@ -22,9 +22,8 @@ enum bfinst_kind {
     bfinst_kind_io_in,
     bfinst_kind_zero,
     bfinst_kind_zeros,
-    bfinst_kind_pseq,
-    bfinst_kind_ngeq,
-    bfinst_kind_pseq2,
+    bfinst_kind_distribution1,
+    bfinst_kind_distribution2,
     bfinst_kind_forshift,
 };
 struct bfinst {
@@ -170,19 +169,7 @@ int main() {
                    itr5.inst == bfinst_kind_while_end &&
                    itr2.data + itr4.data == 0 &&
                    itr1.data + itr3.data == 0) {
-            itr->value.inst = bfinst_kind_pseq;
-            itr->value.data = itr2.data;
-            bfnode_skip(itr, 5);
-        } else if (itr0.inst == bfinst_kind_while_start &&
-                   itr1.inst == bfinst_kind_add_val &&
-                   itr2.inst == bfinst_kind_add_ptr &&
-                   itr3.inst == bfinst_kind_add_val &&
-                   itr4.inst == bfinst_kind_add_ptr &&
-                   itr5.inst == bfinst_kind_while_end &&
-                   itr2.data + itr4.data == 0 &&
-                   itr1.data < 0 &&
-                   itr3.data < 0) {
-            itr->value.inst = bfinst_kind_ngeq;
+            itr->value.inst = bfinst_kind_distribution1;
             itr->value.data = itr2.data;
             bfnode_skip(itr, 5);
         } else if (itr0.inst == bfinst_kind_while_start &&
@@ -195,7 +182,7 @@ int main() {
                    itr7.inst == bfinst_kind_while_end &&
                    itr1.data == -1 &&
                    itr2.data + itr4.data + itr6.data == 0) {
-            itr->value.inst = bfinst_kind_pseq2;
+            itr->value.inst = bfinst_kind_distribution2;
             itr->value.data = itr2.data;
             itr = itr->next;
             itr->value.data = itr3.data;
@@ -251,15 +238,11 @@ int main() {
             case bfinst_kind_zero:
                 bf_mem[bf_ap].data = 0;
                 break;
-            case bfinst_kind_pseq:
+            case bfinst_kind_distribution1:
                 bf_mem[bf_ap + bf_inst[bf_ip].data].data += bf_mem[bf_ap].data;
                 bf_mem[bf_ap].data = 0;
                 break;
-            case bfinst_kind_ngeq:
-                bf_mem[bf_ap + bf_inst[bf_ip].data].data -= bf_mem[bf_ap].data;
-                bf_mem[bf_ap].data = 0;
-                break;
-            case bfinst_kind_pseq2:
+            case bfinst_kind_distribution2:
                 bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;
                 bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;
                 bf_mem[bf_ap].data = 0;
