@@ -1,6 +1,6 @@
-#pragma GCC target("avx")
-#pragma GCC optimize("O3")
-#pragma GCC optimize("unroll-loops")
+// #pragma GCC target("avx")
+// #pragma GCC optimize("O3")
+// #pragma GCC optimize("unroll-loops")
 
 #include <stdint.h>
 #include <stdio.h>
@@ -31,6 +31,7 @@ enum bfinst_kind {
     bfinst_kind_pvpv,
     bfinst_kind_distribution1,
     bfinst_kind_distribution2,
+    bfinst_kind_distribution3,
     bfinst_kind_forshift,
 };
 struct bfinst {
@@ -250,7 +251,7 @@ int main() {
                    itr9.inst == bfinst_kind_while_end &&
                    itr1.data == -1 &&
                    itr2.data + itr4.data + itr6.data + itr8.data == 0) {
-            itr->value.inst = bfinst_kind_distribution2;
+            itr->value.inst = bfinst_kind_distribution3;
             itr->value.data = itr2.data;
             itr = itr->next;
             itr->value.data = itr3.data;
@@ -258,6 +259,10 @@ int main() {
             itr->value.data = itr2.data + itr4.data;
             itr = itr->next;
             itr->value.data = itr5.data;
+            itr = itr->next;
+            itr->value.data = itr2.data + itr4.data + itr6.data;
+            itr = itr->next;
+            itr->value.data = itr7.data;
             bfnode_skip(itr, 4);
         } else {
             itr = itr->next;
@@ -339,6 +344,13 @@ int main() {
                 bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;
                 bf_mem[bf_ap].data = 0;
                 bf_ip += 3;
+                break;
+            case bfinst_kind_distribution3:
+                bf_mem[bf_ap + bf_inst[bf_ip + 0].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 1].data;
+                bf_mem[bf_ap + bf_inst[bf_ip + 2].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 3].data;
+                bf_mem[bf_ap + bf_inst[bf_ip + 4].data].data += bf_mem[bf_ap].data * bf_inst[bf_ip + 5].data;
+                bf_mem[bf_ap].data = 0;
+                bf_ip += 5;
                 break;
             case bfinst_kind_forshift:
                 while (bf_mem[bf_ap].data) {
