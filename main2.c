@@ -6,23 +6,18 @@
 #include <stdio.h>
 #include <time.h>
 
-#define text_size 16384
 #define data_size 65536
-#define data_align 4
+#define data_align 16
 
 int main() {
     clock_t clock_start = clock();
 
-    int32_t ap, ip;
+    int32_t ap;
+    int32_t ip;
 
     static __attribute__((aligned(data_align))) int8_t mem[data_size] = {0};
 
     FILE* file_ptr = fopen("data.txt", "r");
-    if (!file_ptr) {
-        fprintf(stderr, "Error: Unable to open data.txt\n");
-        return 1;
-    }
-
     int32_t file_size = fread(mem, sizeof(int8_t), data_size - 1, file_ptr);
     mem[file_size] = '\0';
     fclose(file_ptr);
@@ -33,20 +28,13 @@ int main() {
     while (1) {
         int8_t ch = mem[ip];
 
-        if (ch == '\0')
+        if (ch == '\0') {
             break;
-
-        if (ch == '+') {
-            mem[ap]++;
+        } else if (ch == '.') {
+            putchar(mem[ap]);
             ip++;
-        } else if (ch == '-') {
-            mem[ap]--;
-            ip++;
-        } else if (ch == '>') {
-            ap++;
-            ip++;
-        } else if (ch == '<') {
-            ap--;
+        } else if (ch == ',') {
+            mem[ap] = getchar();
             ip++;
         } else if (ch == '[') {
             if (mem[ap] == 0) {
@@ -77,11 +65,17 @@ int main() {
             } else {
                 ip++;
             }
-        } else if (ch == '.') {
-            putchar(mem[ap]);
+        } else if (ch == '<') {
+            ap--;
             ip++;
-        } else if (ch == ',') {
-            mem[ap] = getchar();
+        } else if (ch == '>') {
+            ap++;
+            ip++;
+        } else if (ch == '-') {
+            mem[ap]--;
+            ip++;
+        } else if (ch == '+') {
+            mem[ap]++;
             ip++;
         } else {
             ip++;
